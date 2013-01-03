@@ -23,7 +23,7 @@ app.get('/', function(req, res){
 	res.sendfile(__dirname + '/index.html');
 });
 app.get('/feed', function(req, res){
-    res.send(200);
+    getFeed(req,res);
 });
 app.post('/userShout', function(req, res){
     if (req.body.msg.length > 140){
@@ -35,7 +35,7 @@ app.post('/userShout', function(req, res){
 });
 
 app.get('/beat', function(req, res){
-    res.send(200);
+    getFeed(req,res);
 });
 
 app.post('/logIn', function(req, res){
@@ -43,6 +43,7 @@ app.post('/logIn', function(req, res){
         req.session.user = {};
         req.session.user.id = req.body.id;
     }
+    req.session.user.members = [];
     getFeed(req,res);
 });
 app.listen(8000);
@@ -71,11 +72,15 @@ function getFeed(req,res){
     async.waterfall([
     function(callback){
         userDb.smembers('users', function(err,keys){
-           callback(null, keys);
+           var arr = _.difference(keys, req.session.user.members);
+           req.session.user.members = keys;
+           callback(null, arr);
+
         });
         
     },
     function(keys, callback){
+        if (keys.length === 0) callback(null, 200);
         var allMessages = {};
         allMessages.messages = [];
         function getValues(key, done) {
@@ -90,13 +95,16 @@ function getFeed(req,res){
                 done();
             });
         }
-
+        allMessages.allKeys = keys;
         async.forEach(keys, getValues, function(err) {
             callback(null, allMessages);
         });
         
     }
 ], function (err, result) {
+    if (result === 200){
+        res.send(200);
+    }
     if (!err){
         res.send(result);
     } else {

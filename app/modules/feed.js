@@ -21,7 +21,25 @@ function(app,Spinner) {
     tagName: 'li',
     className: 'list-box',
     beforeRender: function(){
+      $(this.el).attr('user-id', this.options.userMessage.get('userId'));
+      $(this.el).attr('message-index', this.options.userMessage.get('index'));
       this.insertView(new Feed.User({model: this.options.userMessage}));
+    },
+    isOnScreen: function(elm){
+        st = $(window).scrollTop(), // Scroll Top
+        y = elm.offset().top + elm.height();
+        if (y > st){
+          console.log('yes');
+          return elm;
+        } else {
+          return false;
+        }
+    },
+    afterRender: function(){
+      var self = this;
+      $(window).on('scroll', function(){
+        self.isOnScreen($(self.el));
+      });
     }
   });
 
@@ -178,29 +196,50 @@ function(app,Spinner) {
     },
     getMessages: function(data){
       var otherMessages = _.shuffle(data.messages);
-      var yourMessages = data.yourMessages.reverse();
+      var yourMessages;
+      if (data.yourMessages){
+        yourMessages = data.yourMessages.reverse();
+      } else {
+        yourMessages = [];
+      }
       var total = 0;
       _.each(data.messages, function(message){
         for (var property in message) {
           total = total + message[property].length;
         }
       });
-      total = total + data.yourMessages.length;
-      for (var i = 0; i < this.limit; i++){
-        if (i + 1 > total) break;
+      total = total + yourMessages.length;
+      if (total === 0) return false;
+      for (var i = 0; i < total; i++){
         //mine
-        this.makeUserView(Feed.userId,yourMessages[i]);
+        this.makeUserView(Feed.userId,yourMessages[i], i);
         //yours
         for (var property in otherMessages[i]) {
-          this.makeUserView(property, otherMessages[i][property][i]);
+          if (data.messages.length === 0) continue;
+          this.makeUserView(property, otherMessages[i][property][i], i);
         }
       }
       
     },
-    makeUserView: function(userId, msg){
+    _makeUserView: function(message, property){
+      var self = this;
+      _.each(message[property], function(msg, i){
+          self.makeUserView(property, msg, i);
+        });
+    },
+    moreMessages: function(data){
+      var self = this;
+      _.each(data.messages, function(message){
+        for (var property in message) {
+          self._makeUserView(message, property);
+        }
+      });
+      
+    },
+    makeUserView: function(userId, msg, index){
       if (!msg) return false;
       var view = new Feed.ListBox({
-        userMessage: new Feed.Model({msg: msg, userId: userId})
+        userMessage: new Feed.Model({msg: msg, userId: userId, index:index})
       });
       this.insertView('ul.feed-list', view);
       view.render();
@@ -209,9 +248,13 @@ function(app,Spinner) {
       $(window).off();
     },
     beat: function(){
-      $.get('/beat', function(){
-
-      });
+      var self = this;
+      setInterval(function(){
+        $.get('/beat', function(data){
+          self.moreMessages(data);
+        });
+      },3000);
+      
     },
     afterRender:function(){
       var self = this;
@@ -238,6 +281,7 @@ function(app,Spinner) {
                 $('.user-posting-section').find('.sticky').addClass('user-sticky');
                 $('.user-posting-section').show();
                 self.getMessages(data);
+                self.beat();
               });
           });
         }
