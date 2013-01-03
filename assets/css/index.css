@@ -1,0 +1,239 @@
+/* H5BP styles. */
+@import "../vendor/h5bp/css/style.css";
+html,body,.main,.feed, input{
+	height:100%;
+	font-family: 'Marcellus', serif;
+}
+html{
+	 -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+body{
+	background-color:#f5f5f5 !important;
+}
+.feed-tabs{
+	margin:auto;
+	width:50%;
+	overflow:hidden;
+}
+div.feed-tabs .tab-pane{
+	padding-bottom: 50px;
+}
+.feed-filters{
+	margin-top:50px;
+}
+.feed-filters li{
+	float:left;
+	width:33%;
+	list-style-type: none;
+	text-align:center;
+	padding: 5px 0px;
+}
+.feed-filters li i{
+	position: relative;
+	top: 3px;
+}
+ul.feed-tabs{
+	border-bottom: 0px solid transparent !important;
+}
+ul.feed-tabs li{
+	width: 33%;
+}
+ul.feed-tabs li a, .feed-filters li{
+	border: 0px solid transparent !important;
+	 transition-duration: 0.5s;
+	-moz-transition-duration: 0.5s; /* Firefox 4 */
+	-webkit-transition-duration: 0.5s; /* Safari and Chrome */
+	-o-transition-duration: 0.5s; /* Opera */ 
+	-ms-transition-duration: 0.5s; /* Opera */
+	-moz-border-radius: 0px;
+	border-radius: 0px;
+	-webkit-border-radius: 0px;
+	color: #555;
+	cursor: pointer !important;
+	font-size: 22px;
+}
+.my-feed:hover{
+	background: #DA825F;
+}
+.shop-feed:hover{
+	background: #F06D61;
+}
+.listing-feed:hover{
+	background: #A8AB7B;
+}
+ul.feed-tabs li a:hover, ul.feed-tabs li.active, ul.feed-tabs li.active a{
+	border: 0px solid transparent !important;
+	background: #8CBF99 !important;
+	color:white !important;
+}
+ul.feed-tabs li a i {
+	position: relative;
+	top: 6px;
+	left: -5px;
+}
+.feed{
+	background: white;
+	width:90%;
+	margin:auto;
+	margin-top: 40px;
+	box-shadow: 0px 0px 5px rgba(34,25,25,0.4);
+	-moz-box-shadow: 0 0px 5px rgba(34,25,25,0.4);
+	-webkit-box-shadow: 0 0px 5px rgba(34,25,25,0.4);
+	height:100%;
+	padding-bottom:350px;
+}
+.search-box{
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	-webkit-border-radius: 3px;
+
+	-moz-box-shadow: 0 0 0 #000,inset 0px 3px 3px #eee;
+	-webkit-box-shadow: 0 0 0 #000,inset 0px 3px 3px #eee;
+	box-shadow: 0 0 0 #000,inset 0px 3px 3px #eee;
+	font-size: 17px !important;
+	border: 1px solid #BFBFBF;
+	padding: 5px !important;
+	margin-bottom: 10px;
+	height: 24px;
+	width: 90%;
+	margin-top:50px;
+}
+.search-input{
+	text-align: center;
+}
+.sticky{
+	outline: none;
+	padding:10px;
+	list-style-type:none;
+	width: 188px;
+	height: 188px;
+	box-shadow: 0px 0px 5px rgba(34,25,25,0.4);
+	-moz-box-shadow: 0 0px 5px rgba(34,25,25,0.4);
+	-webkit-box-shadow: 0 0px 5px rgba(34,25,25,0.4);
+}
+.user-posting-section .sticky{
+	margin:auto;
+	margin-top:50px;
+}
+.user-shout{
+	outline:none;
+	width:100%;
+	height:100%;
+}
+.user-sticky{
+	background: #DA825F;	
+}
+.shop-sticky{
+	background: #F06D61;
+}
+.listing-sticky{
+	background: #A8AB7B;
+}
+.other-user-sticky{
+	background: #8CBF99;
+}
+.pre-shout{
+	font-style: italic;
+	color:#505050;
+}
+.post-shout{
+	position: relative;
+	top: -14px;
+	left: 180px;
+	cursor: pointer;
+}
+.close-box{
+	position: relative;
+	cursor: pointer;
+	top: 30px;
+	left: 92%;
+}
+.adjust-price{
+	cursor: pointer;
+	margin-left:3px;
+}
+.search-shout{
+	position: fixed;
+	width: 90%;
+	background: #f5f5f5;
+	margin-top: -40px;
+	z-index: 1;
+}
+.search-slider-price{
+	width:90%;
+	margin:auto;
+	margin-top: 20px;
+	display:none;
+}
+.price-range-cont{
+	font-size: 18px;
+}
+.price-amount{
+	color: #8CBF99;
+	font-weight:bold;
+}
+.show{
+	display: block;
+}
+.center{
+	text-align: center;
+}
+.fb-login{
+	text-align: center;
+	margin-top:50px;
+}
+.user-posting-section{
+	display:none;
+}
+.fb-login img{
+	cursor: pointer;
+	margin-top:20px;
+}
+.feed-list{
+	margin:0;
+	padding:0;
+}
+.list-box {
+	padding:5px;
+	border:1px solid #f0f0f0;
+	float:left;
+}
+.list-box{
+	margin-right: 0.5% !important;
+	margin-left: 0.5% !important;
+	margin-bottom: 10px;
+	margin-top: 10px;
+	list-style-type:none;
+}
+
+.list-box li {
+	margin:5px;
+}
+.move-down{
+	position: relative;
+	top:300px;
+}
+.listing-sticky{
+	cursor:pointer;
+}
+.listing-image{
+	width:100%;
+	height:100px;
+	background-repeat: no-repeat;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+}
+.listing-sticky img{
+	display: block;
+	margin: auto;
+}
+.listing-price-container {
+	text-align: right;
+	font-weight:bold;
+	color:white;
+}
+hr{
+	margin:10px;
+}

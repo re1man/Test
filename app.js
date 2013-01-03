@@ -1,0 +1,139 @@
+var express = require('express');
+var app = express();
+var OAuth= require('oauth').OAuth;
+var RedisStore = require('connect-redis')(express);
+var redis = require("redis"),
+userDb = redis.createClient(),
+shopDb = redis.createClient(),
+listingDb = redis.createClient();
+var async = require('async');
+var _= require('underscore');
+
+var store = new RedisStore({db:3});
+
+
+app.use("/assets", express.static(__dirname + '/assets'));
+app.use("/app", express.static(__dirname + '/app'));
+app.use(express.cookieParser());
+app.use(express.bodyParser());
+app.use(express.session({ secret: 'Amer1canBe@uty', store: store }));
+
+
+app.get('/', function(req, res){
+	res.sendfile(__dirname + '/index.html');
+});
+app.get('/feed', function(req, res){
+    res.send(200);
+});
+app.post('/userShout', function(req, res){
+    if (req.body.msg.length > 140){
+        res.send(new Error('Message is too long'));
+    } else {
+        setUserMessage(req.session.user.id, req.body.msg, res);
+    }
+    
+});
+
+app.get('/beat', function(req, res){
+    res.send(200);
+});
+
+app.post('/logIn', function(req, res){
+    if (!req.session.user){
+        req.session.user = {};
+        req.session.user.id = req.body.id;
+    }
+    getFeed(req,res);
+});
+app.listen(8000);
+console.log('starting server');
+
+async.waterfall([
+    function(callback){
+    	userDb.select(0, callback(null));
+    },
+    function(callback){
+        shopDb.select(1, callback(null));
+    },
+    function(callback){
+        listingDb.select(2, callback(null));
+    },
+    function(callback){
+        callback(null);
+    }
+], function (err, result) {
+    console.log(err);
+    
+});
+
+
+function getFeed(req,res){
+    async.waterfall([
+    function(callback){
+        userDb.smembers('users', function(err,keys){
+           callback(null, keys);
+        });
+        
+    },
+    function(keys, callback){
+        var allMessages = {};
+        allMessages.messages = [];
+        function getValues(key, done) {
+            userDb.hmget(key, 'messages', function(err, msgs){
+                var userMessages = {};
+                if (key !== req.session.user.id){
+                    userMessages[key] = JSON.parse(msgs);
+                    allMessages.messages.push(userMessages);
+                } else {
+                    allMessages.yourMessages = JSON.parse(msgs);
+                }
+                done();
+            });
+        }
+
+        async.forEach(keys, getValues, function(err) {
+            callback(null, allMessages);
+        });
+        
+    }
+], function (err, result) {
+    if (!err){
+        res.send(result);
+    } else {
+        res.send(new Error('There was an error. Please try Again'));
+    }
+    
+});
+}
+function setUserMessage(userId, msg, res){
+    async.waterfall([
+    function(callback){
+        var messages;
+        userDb.hmget(userId, 'messages', function(err, msgs){
+            messages = msgs;
+            callback(null, messages);
+        });
+        
+    },
+    function(messages, callback){
+        var msgs;
+        if (!messages[0]){
+            msgs = [];
+            userDb.sadd('users', userId);
+        } else {
+            msgs = JSON.parse(messages);
+        }
+        msgs.push(msg);
+        var _msgs = JSON.stringify(msgs);
+        userDb.hmset(userId, 'messages', _msgs);
+        callback(null, msgs);
+    }
+], function (err, result) {
+    if (!err){
+        res.send({msgs: result});
+    } else {
+        res.send(new Error('There was an error. Please try Again'));
+    }
+    
+});
+}
