@@ -304,8 +304,6 @@ function(app,Spinner) {
     makeUserView: function(userId, msg, index){
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         var elem = $('.list-box[user-id='+userId+']'+'[message-index='+index+']');
-        console.log(elem.text());
-        console.log(msg);
         if (elem.text().trim() !== msg) {
           elem.find('.user-messaged').fadeOut('fast', function(){
             $(this).text(msg).fadeIn('fast');
