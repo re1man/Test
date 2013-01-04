@@ -41,11 +41,7 @@ ul.feed-tabs li{
 }
 ul.feed-tabs li a, .feed-filters li, .search-filters li{
 	border: 0px solid transparent !important;
-	 transition-duration: 0.5s;
-	-moz-transition-duration: 0.5s; /* Firefox 4 */
-	-webkit-transition-duration: 0.5s; /* Safari and Chrome */
-	-o-transition-duration: 0.5s; /* Opera */ 
-	-ms-transition-duration: 0.5s; /* Opera */
+
 	-moz-border-radius: 0px;
 	border-radius: 0px;
 	-webkit-border-radius: 0px;
@@ -53,16 +49,23 @@ ul.feed-tabs li a, .feed-filters li, .search-filters li{
 	cursor: pointer !important;
 	font-size: 22px;
 }
-.my-feed:hover, .my-feed.engaged{
+.no-touch ul.feed-tabs li a, .no-touch .feed-filters li, .no-touch .search-filters li{
+		 transition-duration: 0.5s;
+	-moz-transition-duration: 0.5s; /* Firefox 4 */
+	-webkit-transition-duration: 0.5s; /* Safari and Chrome */
+	-o-transition-duration: 0.5s; /* Opera */ 
+	-ms-transition-duration: 0.5s; /* Opera */
+}
+.no-touch .my-feed:hover, .my-feed.engaged{
 	background: #DA825F;
 }
-.shop-feed:hover{
+.no-touch .shop-feed:hover{
 	background: #F06D61;
 }
-.listing-feed:hover{
+.no-touch .listing-feed:hover{
 	background: #A8AB7B;
 }
-ul.feed-tabs li a:hover, ul.feed-tabs li.active, ul.feed-tabs li.active a{
+.no-touch ul.feed-tabs li a:hover, ul.feed-tabs li.active, ul.feed-tabs li.active a{
 	border: 0px solid transparent !important;
 	background: #8CBF99 !important;
 	color:white !important;

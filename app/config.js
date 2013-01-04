@@ -16,12 +16,12 @@ require.config({
     backbone: "../assets/js/libs/backbone",
     handlebars: "../assets/js/libs/handlebars-1.0.0.beta.6",
     bootstrap: "../assets/js/libs/bootstrap",
-    "jquery-ui": "../assets/js/libs/jquery-ui-1.9.2.custom",
     "facebook-api": "../assets/js/libs/facebook-api",
     'propertyParser':'../assets/js/plugins/propertyParser',
     'spin':'../assets/js/plugins/spin',
     'spinnerOpts':'../assets/js/plugins/spinnerOpts',
-    'touch-punch':'../assets/js/plugins/jquery.ui.touch-punch'
+    'modernizr': '../assets/js/libs/modernizr.custom.95716',
+    'backbone-touch':'../assets/js/plugins/backbone.touch'
   },
 
   shim: {
@@ -30,17 +30,13 @@ require.config({
       deps: ["lodash", "jquery"],
       exports: "Backbone"
     },
+    'backbone-touch': {
+      deps: ["backbone"],
+      exports: "Backbone-touch"
+    },
     bootstrap: {
       deps: ["jquery"],
       exports: "Bootstrap"
-    },
-    "jquery-ui":{
-      deps: ["jquery"],
-      exports: "Jquery-ui"
-    },
-    "touch-punch": {
-      deps: ["jquery-ui"],
-      exports: "Touch-Punch"
     },
     // Handlebars has no dependencies.
     handlebars: {

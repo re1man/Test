@@ -4,9 +4,10 @@ define([
   "lodash",
   "backbone",
   "handlebars",
+  "modernizr",
+  'backbone-touch',
   "bootstrap",
-  "jquery-ui",
-  "touch-punch",
+
   // Plugins.
   "plugins/backbone.layoutmanager"
 ],

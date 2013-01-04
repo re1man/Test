@@ -7,6 +7,7 @@ define([
 
 // Map dependencies from above array.
 function(app,Spinner) {
+
   // Create a new module.
   var Feed = app.module();
   Feed.Intervals = {};
@@ -56,7 +57,7 @@ function(app,Spinner) {
       if (this.model.get('userId') === Feed.userId){
         this.contentEditable = $(this.el).find('.user-messaged');
         $(this.el).find('.user-messaged').attr('contenteditable', 'true');
-        $(this.el).find('.post-shout').tooltip({placement: 'right'});
+        if (!Modernizr.touch) $(this.el).find('.post-shout').tooltip({placement: 'right'});
         $(this.el).attr('data-content', "There was an error. Please try again.");
         $(this.el).popover({placement: 'top', trigger: 'manual'});
       }
@@ -144,7 +145,6 @@ function(app,Spinner) {
       'blur .user-shout': 'blurShout',
       'keyup .user-shout': 'checkText',
       'keydown .user-shout': 'checkText',
-      'click .adjust-price': 'showPriceAdjuster',
       'click .my-feed': 'myFeed'
     },
     initialize: function(){
@@ -163,10 +163,10 @@ function(app,Spinner) {
       }
     },
     iconWhitePostShout: function(e){
-      $(e.currentTarget).addClass('icon-white');
+      if (!Modernizr.touch) $(e.currentTarget).addClass('icon-white');
     },
     iconBlackPostShout: function(e){
-      $(e.currentTarget).removeClass('icon-white');
+      if (!Modernizr.touch) $(e.currentTarget).removeClass('icon-white');
     },
     postShout: function(e){
       if ($('.user-shout').text().trim().length > 0 && $('.user-shout').text().trim() !== this.shoutPlaceholder){
@@ -223,7 +223,7 @@ function(app,Spinner) {
       $('.search-slider-price').toggleClass('show');
     },
     iconWhite: function(e){
-      $(e.currentTarget).find('i').addClass('icon-white');
+      if (!Modernizr.touch) $(e.currentTarget).find('i').addClass('icon-white');
     },
     iconBlack: function(e){
       if (!$(e.currentTarget).parent().hasClass('active')){
@@ -361,20 +361,12 @@ function(app,Spinner) {
 
       this.contentEditable = $('.user-shout');
       $('.feed-tabs>li.active').find('i').addClass('icon-white');
-      $('.post-shout, .close-box,.adjust-price').tooltip({placement: 'right'});
-      $(".feed-filters>li, .search-filters>li").tooltip({placement: 'top'});
+      if (!Modernizr.touch){
+        $('.post-shout, .close-box,.adjust-price').tooltip({placement: 'right'});
+        $(".feed-filters>li, .search-filters>li").tooltip({placement: 'top'});
+      }
       $('.user-shout').popover({placement: 'top', trigger: 'manual'});
-      $( ".search-slider-price" ).slider({
-            range: true,
-            min: 0,
-            max: 500,
-            values: [ 75, 300 ],
-            slide: function( event, ui ) {
-                $( ".price-amount" ).text( "$" + ui.values[ 0 ] + " - $" + ui.values[ 1 ] );
-            }
-        });
-      $( ".price-amount" ).text( "$" + $( ".search-slider-price" ).slider( "values", 0 ) +
-            " - $" + $( ".search-slider-price" ).slider( "values", 1 ) );
+      
     }
   });
   // Return the module for AMD compliance.
