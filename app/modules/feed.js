@@ -9,7 +9,7 @@ define([
 function(app,Spinner) {
   // Create a new module.
   var Feed = app.module();
-
+  Feed.Intervals = {};
   // Default model.
   Feed.Model = Backbone.Model.extend();
 
@@ -21,25 +21,10 @@ function(app,Spinner) {
     tagName: 'li',
     className: 'list-box',
     beforeRender: function(){
+      this.int = this.options.userMessage.get('userId');
       $(this.el).attr('user-id', this.options.userMessage.get('userId'));
       $(this.el).attr('message-index', this.options.userMessage.get('index'));
       this.insertView(new Feed.User({model: this.options.userMessage}));
-    },
-    isOnScreen: function(elm){
-        st = $(window).scrollTop(), // Scroll Top
-        y = elm.offset().top + elm.height();
-        if (y > st){
-          console.log('yes');
-          return elm;
-        } else {
-          return false;
-        }
-    },
-    afterRender: function(){
-      var self = this;
-      $(window).on('scroll', function(){
-        self.isOnScreen($(self.el));
-      });
     }
   });
 
@@ -55,10 +40,7 @@ function(app,Spinner) {
         $(this.el).addClass('user-sticky');
       } else {
         $(this.el).addClass('other-user-sticky');
-      } 
-    },
-    afterRender: function(){
-      console.log('hi');
+      }
     }
   });
 
@@ -237,6 +219,7 @@ function(app,Spinner) {
       
     },
     makeUserView: function(userId, msg, index){
+      if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0) return false;
       if (!msg) return false;
       var view = new Feed.ListBox({
         userMessage: new Feed.Model({msg: msg, userId: userId, index:index})
@@ -251,10 +234,10 @@ function(app,Spinner) {
       var self = this;
       setInterval(function(){
         $.get('/beat', function(data){
+          console.log(data);
           self.moreMessages(data);
         });
-      },3000);
-      
+      },500);
     },
     afterRender:function(){
       var self = this;
@@ -290,7 +273,7 @@ function(app,Spinner) {
       this.contentEditable = $('.user-shout');
       $('.feed-tabs>li.active').find('i').addClass('icon-white');
       $('.post-shout, .close-box,.adjust-price').tooltip({placement: 'right'});
-      $(".feed-filters>li").tooltip({placement: 'top'});
+      $(".feed-filters>li, .search-filters>li").tooltip({placement: 'top'});
       $('.user-shout').popover({placement: 'top', trigger: 'manual'});
       $( ".search-slider-price" ).slider({
             range: true,

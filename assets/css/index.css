@@ -18,17 +18,18 @@ body{
 div.feed-tabs .tab-pane{
 	padding-bottom: 50px;
 }
-.feed-filters{
+.feed-filters, .search-filters{
 	margin-top:50px;
 }
-.feed-filters li{
+.feed-filters li, .search-filters li{
 	float:left;
 	width:33%;
 	list-style-type: none;
 	text-align:center;
 	padding: 5px 0px;
+	cursor: pointer;
 }
-.feed-filters li i{
+.feed-filters li i, .search-filters li i{
 	position: relative;
 	top: 3px;
 }
@@ -38,7 +39,7 @@ ul.feed-tabs{
 ul.feed-tabs li{
 	width: 33%;
 }
-ul.feed-tabs li a, .feed-filters li{
+ul.feed-tabs li a, .feed-filters li, .search-filters li{
 	border: 0px solid transparent !important;
 	 transition-duration: 0.5s;
 	-moz-transition-duration: 0.5s; /* Firefox 4 */

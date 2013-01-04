@@ -31,12 +31,12 @@ app.post('/userShout', function(req, res){
     } else {
         setUserMessage(req.session.user.id, req.body.msg, res);
     }
-    
 });
 
 app.get('/beat', function(req, res){
     getFeed(req,res);
 });
+
 
 app.post('/logIn', function(req, res){
     if (!req.session.user){
@@ -71,13 +71,10 @@ async.waterfall([
 function getFeed(req,res){
     async.waterfall([
     function(callback){
-        userDb.smembers('users', function(err,keys){
-           var arr = _.difference(keys, req.session.user.members);
-           req.session.user.members = keys;
-           callback(null, arr);
+            userDb.smembers('users', function(err,keys){
+                callback(null, keys);
 
-        });
-        
+            });
     },
     function(keys, callback){
         if (keys.length === 0) callback(null, 200);
