@@ -332,6 +332,9 @@ function(app,Spinner) {
       var self = this;
       this.checkWindow();
       $(window).on('resize', this.checkWindow);
+      $(window).scroll(function(){
+        self.closeBox();
+      });
       require( ['facebook-api!appId:' + this.facebook_id], function(FB) {
         $(".fb-login>img").click(function() {
            FB.login(function (response){
