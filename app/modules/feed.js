@@ -219,13 +219,20 @@ function(app,Spinner) {
       
     },
     makeUserView: function(userId, msg, index){
-      if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0) return false;
-      if (!msg) return false;
-      var view = new Feed.ListBox({
-        userMessage: new Feed.Model({msg: msg, userId: userId, index:index})
-      });
-      this.insertView('ul.feed-list', view);
-      view.render();
+      if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
+        var elem = $('.list-box[user-id='+userId+']'+'[message-index='+index+']');
+        if (elem.text() !== msg) {
+          elem.text(msg);
+        }
+      } else {
+        if (!msg) return false;
+        var view = new Feed.ListBox({
+          userMessage: new Feed.Model({msg: msg, userId: userId, index:index})
+        });
+        this.insertView('ul.feed-list', view);
+        view.render();
+      }
+      
     },
     beforeRender: function(){
       $(window).off();
