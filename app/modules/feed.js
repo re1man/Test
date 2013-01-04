@@ -105,7 +105,7 @@ function(app,Spinner) {
         var target = userMessaged[0];
         var spinner = new Spinner(window.spinnerOpts).spin(target);
         userMessaged.attr('contenteditable', 'false');
-        $.post('userShout', {msg: userMessaged.text(), index:this.options.index}, function(res){
+        $.post('userShout', {msg: userMessaged.text(), index:self.options.index}, function(res){
           if (!res.msgs){
             userMessaged.parent().popover('show');
           } else{
@@ -182,7 +182,7 @@ function(app,Spinner) {
           } else{
             var view = new Feed.ListBox({
               // Prepend the element instead of append.
-                userMessage: new Feed.Model({msg: $('.user-shout').text(), userId: Feed.userId}),
+                userMessage: new Feed.Model({msg: $('.user-shout').text(), userId: Feed.userId, index:res.index}),
                 append: function(root, child) {
                   $(root).prepend(child);
                 }
@@ -304,8 +304,12 @@ function(app,Spinner) {
     makeUserView: function(userId, msg, index){
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         var elem = $('.list-box[user-id='+userId+']'+'[message-index='+index+']');
-        if (elem.text() !== msg) {
-          elem.find('.user-messaged').text(msg);
+        console.log(elem.text());
+        console.log(msg);
+        if (elem.text().trim() !== msg) {
+          elem.find('.user-messaged').fadeOut('fast', function(){
+            $(this).text(msg).fadeIn('fast');
+          });
         }
       } else {
         if (!msg) return false;

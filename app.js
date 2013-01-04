@@ -116,11 +116,11 @@ function setUserMessage(userId, msg, res,index){
         var messages;
         userDb.hmget(userId, 'messages', function(err, msgs){
             messages = msgs;
-            callback(null, messages);
+            callback(null, messages, index);
         });
         
     },
-    function(messages, callback){
+    function(messages, index, callback){
         var msgs;
         if (!messages[0]){
             msgs = [];
@@ -132,14 +132,15 @@ function setUserMessage(userId, msg, res,index){
             msgs[index] = msg;
         } else {
             msgs.push(msg);
+            var index = msgs.length - 1;
         }
         var _msgs = JSON.stringify(msgs);
         userDb.hmset(userId, 'messages', _msgs);
-        callback(null, msgs);
+        callback(null, msgs, index);
     }
-], function (err, result) {
+], function (err, result, index) {
     if (!err){
-        res.send({msgs: result});
+        res.send({msgs: result, index:index});
     } else {
         res.send(new Error('There was an error. Please try Again'));
     }
