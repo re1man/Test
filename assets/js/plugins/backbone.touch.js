@@ -51,7 +51,6 @@
                 var boundHandler = _.bind(this._touchHandler,this);
                 method = _.bind(method, this);
                 if (this.isTouch && eventName === 'click' && selector !== '' && Modernizr.touch) {
-                    alert('hi');
                     this.$el.on('touchstart' + suffix, selector, boundHandler);
                     this.$el.on('touchend' + suffix, selector,
                         {method:method},
