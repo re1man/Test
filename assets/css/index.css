@@ -53,7 +53,7 @@ ul.feed-tabs li a, .feed-filters li, .search-filters li{
 	cursor: pointer !important;
 	font-size: 22px;
 }
-.my-feed:hover{
+.my-feed:hover, .my-feed.engaged{
 	background: #DA825F;
 }
 .shop-feed:hover{
@@ -111,6 +111,10 @@ ul.feed-tabs li a i {
 	box-shadow: 0px 0px 5px rgba(34,25,25,0.4);
 	-moz-box-shadow: 0 0px 5px rgba(34,25,25,0.4);
 	-webkit-box-shadow: 0 0px 5px rgba(34,25,25,0.4);
+}
+.user-messaged{
+	height:100%;
+	outline: none;
 }
 .user-posting-section .sticky{
 	margin:auto;
@@ -238,3 +242,9 @@ ul.feed-tabs li a i {
 hr{
 	margin:10px;
 }
+.list-box .user-sticky .post-shout, .list-box .other-user-sticky .post-shout{
+	display:none;
+}
+.list-box .user-sticky.pre-edit-shout .post-shout{
+	display:inline-block;
+}  

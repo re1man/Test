@@ -29,7 +29,7 @@ app.post('/userShout', function(req, res){
     if (req.body.msg.length > 140){
         res.send(new Error('Message is too long'));
     } else {
-        setUserMessage(req.session.user.id, req.body.msg, res);
+        setUserMessage(req.session.user.id, req.body.msg, res, req.body.index);
     }
 });
 
@@ -110,7 +110,7 @@ function getFeed(req,res){
     
 });
 }
-function setUserMessage(userId, msg, res){
+function setUserMessage(userId, msg, res,index){
     async.waterfall([
     function(callback){
         var messages;
@@ -128,7 +128,11 @@ function setUserMessage(userId, msg, res){
         } else {
             msgs = JSON.parse(messages);
         }
-        msgs.push(msg);
+        if (index) {
+            msgs[index] = msg;
+        } else {
+            msgs.push(msg);
+        }
         var _msgs = JSON.stringify(msgs);
         userDb.hmset(userId, 'messages', _msgs);
         callback(null, msgs);

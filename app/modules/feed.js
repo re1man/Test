@@ -17,29 +17,102 @@ function(app,Spinner) {
   Feed.Collection = Backbone.Collection.extend();
 
   Feed.ListBox = Backbone.View.extend({
-    template: 'layouts/listBox',
+    template: 'app/templates/layouts/listBox',
     tagName: 'li',
     className: 'list-box',
     beforeRender: function(){
       this.int = this.options.userMessage.get('userId');
       $(this.el).attr('user-id', this.options.userMessage.get('userId'));
       $(this.el).attr('message-index', this.options.userMessage.get('index'));
-      this.insertView(new Feed.User({model: this.options.userMessage}));
+      this.insertView(new Feed.User({model: this.options.userMessage, index: this.options.userMessage.get('index')}));
     }
   });
 
   Feed.User = Backbone.View.extend({
     tagName: 'li',
-    template: 'layouts/user-post',
+    template: 'app/templates/layouts/user-post',
     className: 'sticky',
+    initialize: function(){
+      this.shoutPlaceholder = this.model.get('msg');
+      this.model.on('change', this.refresh, this);
+    },
+    refresh: function(){
+      this.shoutPlaceholder = this.model.get('msg');
+      this.render();
+      $(this.el).find('.user-messaged').trigger('blur');
+    },
     serialize: function(){
       return this.model.toJSON();
     },
     beforeRender: function(){
       if (this.model.get('userId') === Feed.userId){
         $(this.el).addClass('user-sticky');
+        
       } else {
         $(this.el).addClass('other-user-sticky');
+      }
+    },
+    afterRender: function(){
+      if (this.model.get('userId') === Feed.userId){
+        this.contentEditable = $(this.el).find('.user-messaged');
+        $(this.el).find('.user-messaged').attr('contenteditable', 'true');
+        $(this.el).find('.post-shout').tooltip({placement: 'right'});
+        $(this.el).attr('data-content', "There was an error. Please try again.");
+        $(this.el).popover({placement: 'top', trigger: 'manual'});
+      }
+    },
+    events: {
+      'focus .user-messaged': 'focusShout',
+      'blur .user-messaged': 'blurShout',
+      'keyup .user-messaged': 'checkText',
+      'keydown .user-messaged': 'checkText',
+      'click .post-shout': 'postShout'
+    },
+    checkText: function(e){
+      if (e.keyCode === 13){
+        this.postShout();
+        return false;
+      } else {
+        this.check_charcount(this.max, e);
+      }
+    },
+    check_charcount: function(max, e){
+        if(e.which != 8 && this.contentEditable.text().length >= max)
+        {
+            e.preventDefault();
+        }
+    },
+    focusShout: function(e){
+      var text = $(e.currentTarget).text().trim();
+      if (text === this.shoutPlaceholder){
+        $(e.currentTarget).text('');
+        $(e.currentTarget).parent().addClass('pre-edit-shout');
+      }
+      this.check_charcount(this.max, e);
+      $(this.el).popover('hide');
+    },
+    blurShout: function(e){
+      var text = $(e.currentTarget).text().trim();
+      $(e.currentTarget).text(this.shoutPlaceholder);
+      $(e.currentTarget).parent().removeClass('pre-edit-shout');
+    },
+    postShout: function(){
+      var userMessaged = $(this.el).find('.user-messaged');
+      if (userMessaged.text().trim().length > 0 && userMessaged.text().trim() !== this.shoutPlaceholder){
+        $('.post-shout').hide();
+        var self = this;
+        var target = userMessaged[0];
+        var spinner = new Spinner(window.spinnerOpts).spin(target);
+        userMessaged.attr('contenteditable', 'false');
+        $.post('userShout', {msg: userMessaged.text(), index:this.options.index}, function(res){
+          if (!res.msgs){
+            userMessaged.parent().popover('show');
+          } else{
+            self.model.set('msg', userMessaged.text());
+          }
+          userMessaged.parent().removeClass('pre-edit-shout');
+          userMessaged.attr('contenteditable', 'true');
+        });
       }
     }
   });
@@ -47,17 +120,17 @@ function(app,Spinner) {
   Feed.Shop = Backbone.View.extend({
     tagName: 'li',
     className: 'shop-sticky sticky',
-    template: 'layouts/shop-post'
+    template: 'app/templates/layouts/shop-post'
   });
 
   Feed.Listing = Backbone.View.extend({
     tagName: 'li',
     className: 'listing-sticky sticky',
-    template: 'layouts/listing-post'
+    template: 'app/templates/layouts/listing-post'
   });
 
   Feed.List = Backbone.View.extend({
-    template: 'layouts/list',
+    template: 'app/templates/layouts/list',
     className: 'feed',
     events: {
       'mouseenter .feed-tabs>li>a, .feed-filters>li': 'iconWhite',
@@ -65,19 +138,29 @@ function(app,Spinner) {
       'click .feed-tabs>li>a': 'resetIcon',
       'mouseenter .post-shout': 'iconWhitePostShout',
       'mouseleave .post-shout': 'iconBlackPostShout',
-      'click .post-shout': 'postShout',
+      'click .user-posting-section>.sticky>.post-shout': 'postShout',
       'click .close-box': 'closeBox',
       'focus .user-shout': 'focusShout',
       'blur .user-shout': 'blurShout',
       'keyup .user-shout': 'checkText',
       'keydown .user-shout': 'checkText',
-      'click .adjust-price': 'showPriceAdjuster'
+      'click .adjust-price': 'showPriceAdjuster',
+      'click .my-feed': 'myFeed'
     },
     initialize: function(){
       this.shoutPlaceholder = "Post something!";
       this.max = 140;
       this.facebook_id = '345555722142160';
       this.limit = 10;
+    },
+    myFeed: function(e){
+      if ($(e.currentTarget).hasClass('engaged')){
+        $(e.currentTarget).removeClass('engaged');
+        $('.other-user-sticky').parent().show();
+      } else {
+        $(e.currentTarget).addClass('engaged');
+        $('.other-user-sticky').parent().hide();
+      }
     },
     iconWhitePostShout: function(e){
       $(e.currentTarget).addClass('icon-white');
@@ -86,7 +169,7 @@ function(app,Spinner) {
       $(e.currentTarget).removeClass('icon-white');
     },
     postShout: function(e){
-      if ($('.user-shout').text().trim().length > 0){
+      if ($('.user-shout').text().trim().length > 0 && $('.user-shout').text().trim() !== this.shoutPlaceholder){
         $('.post-shout').hide();
         var self = this;
         var target = $('.user-shout')[0];
@@ -222,7 +305,7 @@ function(app,Spinner) {
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         var elem = $('.list-box[user-id='+userId+']'+'[message-index='+index+']');
         if (elem.text() !== msg) {
-          elem.text(msg);
+          elem.find('.user-messaged').text(msg);
         }
       } else {
         if (!msg) return false;
@@ -241,7 +324,6 @@ function(app,Spinner) {
       var self = this;
       setInterval(function(){
         $.get('/beat', function(data){
-          console.log(data);
           self.moreMessages(data);
         });
       },500);

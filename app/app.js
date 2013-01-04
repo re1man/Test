@@ -81,7 +81,7 @@ function($, _, Backbone, Handlebars, Spinner) {
       
       // Create a new Layout with options.
       var layout = new Backbone.Layout(_.extend({
-        template: name,
+        template: 'app/templates/layouts/'+name,
         className: "layout " + name,
         id: "layout"
       }, options));
