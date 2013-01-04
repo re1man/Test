@@ -20,7 +20,8 @@ require.config({
     "facebook-api": "../assets/js/libs/facebook-api",
     'propertyParser':'../assets/js/plugins/propertyParser',
     'spin':'../assets/js/plugins/spin',
-    'spinnerOpts':'../assets/js/plugins/spinnerOpts'
+    'spinnerOpts':'../assets/js/plugins/spinnerOpts',
+    'touch-punch':'../assets/js/plugins/jquery.ui.touch-punch'
   },
 
   shim: {
@@ -36,6 +37,10 @@ require.config({
     "jquery-ui":{
       deps: ["jquery"],
       exports: "Jquery-ui"
+    },
+    "touch-punch": {
+      deps: ["jquery-ui"],
+      exports: "Touch-Punch"
     },
     // Handlebars has no dependencies.
     handlebars: {

@@ -6,12 +6,12 @@ define([
   "handlebars",
   "bootstrap",
   "jquery-ui",
-
+  "touch-punch",
   // Plugins.
   "plugins/backbone.layoutmanager"
 ],
 
-function($, _, Backbone, Handlebars, Spinner) {
+function($, _, Backbone, Handlebars) {
 
   // Provide a global location to place configuration settings and module
   // creation.
