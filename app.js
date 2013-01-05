@@ -132,7 +132,7 @@ function setUserMessage(userId, mess, res,index){
         } else {
             msgs = JSON.parse(messages);
         }
-        if (index) {
+        if (index && msgs[index]) {
             msgs[index].msg = mess;
         } else {
             var _msg = {};
