@@ -60,6 +60,8 @@ function(app,Spinner) {
         if (!Modernizr.touch) $(this.el).find('.post-shout').tooltip({placement: 'right'});
         $(this.el).attr('data-content', "There was an error. Please try again.");
         $(this.el).popover({placement: 'top', trigger: 'manual'});
+      } else {
+        if (!Modernizr.touch) $(this.el).find('.post-comment').tooltip({placement: 'right'});
       }
     },
     events: {
@@ -137,8 +139,8 @@ function(app,Spinner) {
       'mouseenter .feed-tabs>li>a, .feed-filters>li': 'iconWhite',
       'mouseleave .feed-tabs>li>a, .feed-filters>li': 'iconBlack',
       'click .feed-tabs>li>a': 'resetIcon',
-      'mouseenter .post-shout': 'iconWhitePostShout',
-      'mouseleave .post-shout': 'iconBlackPostShout',
+      'mouseenter .post-shout, .post-comment': 'iconWhitePostShout',
+      'mouseleave .post-shout, .post-comment': 'iconBlackPostShout',
       'click .user-posting-section>.sticky>.post-shout': 'postShout',
       'click .close-box': 'closeBox',
       'focus .user-shout': 'focusShout',
@@ -277,19 +279,25 @@ function(app,Spinner) {
       if (total === 0) return false;
       for (var i = 0; i < total; i++){
         //mine
-        this.makeUserView(Feed.userId,yourMessages[i], i);
-        //yours
-        for (var property in otherMessages[i]) {
-          if (data.messages.length === 0) continue;
-          this.makeUserView(property, otherMessages[i][property][i], i);
+        if (Feed.userId,yourMessages[i]) {
+          this.makeUserView(Feed.userId,yourMessages[i].msg, i);
         }
+        
+        //yours
+        if (otherMessages[i]){
+          for (var property in otherMessages[i]) {
+          if (data.messages.length === 0) continue;
+            this.makeUserView(property, otherMessages[i][property][i].msg, i);
+          }
+        }
+        
       }
       
     },
     _makeUserView: function(message, property){
       var self = this;
       _.each(message[property], function(msg, i){
-          self.makeUserView(property, msg, i);
+          self.makeUserView(property, msg.msg, i);
         });
     },
     moreMessages: function(data){
@@ -304,7 +312,7 @@ function(app,Spinner) {
     makeUserView: function(userId, msg, index){
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         var elem = $('.list-box[user-id='+userId+']'+'[message-index='+index+']');
-        if (elem.text().trim() !== msg) {
+        if (elem.find('.user-messaged').text().trim() !== msg) {
           elem.find('.user-messaged').fadeOut('fast', function(){
             $(this).text(msg).fadeIn('fast');
           });

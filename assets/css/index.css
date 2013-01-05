@@ -140,11 +140,14 @@ ul.feed-tabs li a i {
 .other-user-sticky{
 	background: #8CBF99;
 }
+.comment-sticky{
+	background: #D98041;
+}
 .pre-shout{
 	font-style: italic;
 	color:#505050;
 }
-.post-shout{
+.post-shout, .post-comment{
 	position: relative;
 	top: -14px;
 	left: 180px;
@@ -263,7 +266,7 @@ ul.feed-tabs li a i {
 hr{
 	margin:10px;
 }
-.list-box .user-sticky .post-shout, .list-box .other-user-sticky .post-shout{
+.list-box .user-sticky .post-shout, .list-box .other-user-sticky .post-shout, .list-box .user-sticky .post-comment{
 	display:none;
 }
 .list-box .user-sticky.pre-edit-shout .post-shout{
