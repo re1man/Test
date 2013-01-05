@@ -150,11 +150,29 @@ ul.feed-tabs li a i {
 	left: 180px;
 	cursor: pointer;
 }
-.close-box{
+.no-touch .desktop{
+	display:inline-block;
+}
+.no-touch .mobile {
+	display: none;
+}
+.touch .desktop {
+	display: none;
+}
+.touch .mobile {
+	display:block;
+}
+.no-touch .close-box{
 	position: relative;
 	cursor: pointer;
 	top: 30px;
 	left: 92%;
+}
+.touch .close-box{
+	position: relative;
+	cursor: pointer;
+	top: 30px;
+	left: 0%;
 }
 .adjust-price{
 	cursor: pointer;
