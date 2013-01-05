@@ -280,14 +280,14 @@ function(app,Spinner) {
       for (var i = 0; i < total; i++){
         //mine
         if (Feed.userId,yourMessages[i]) {
-          this.makeUserView(Feed.userId,yourMessages[i].msg, i);
+          this.makeUserView(Feed.userId,yourMessages[i], i);
         }
         
         //yours
         if (otherMessages[i]){
           for (var property in otherMessages[i]) {
           if (data.messages.length === 0) continue;
-            this.makeUserView(property, otherMessages[i][property][i].msg, i);
+            this.makeUserView(property, otherMessages[i][property][i], i);
           }
         }
         
@@ -297,7 +297,7 @@ function(app,Spinner) {
     _makeUserView: function(message, property){
       var self = this;
       _.each(message[property], function(msg, i){
-          self.makeUserView(property, msg.msg, i);
+          self.makeUserView(property, msg, i);
         });
     },
     moreMessages: function(data){
@@ -312,15 +312,15 @@ function(app,Spinner) {
     makeUserView: function(userId, msg, index){
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         var elem = $('.list-box[user-id='+userId+']'+'[message-index='+index+']');
-        if (elem.find('.user-messaged').text().trim() !== msg) {
+        if (elem.find('.user-messaged').text().trim() !== msg.msg) {
           elem.find('.user-messaged').fadeOut('fast', function(){
-            $(this).text(msg).fadeIn('fast');
+            $(this).text(msg.msg).fadeIn('fast');
           });
         }
       } else {
-        if (!msg) return false;
+        if (!msg.msg) return false;
         var view = new Feed.ListBox({
-          userMessage: new Feed.Model({msg: msg, userId: userId, index:index})
+          userMessage: new Feed.Model({msg: msg.msg, userId: userId, index:index})
         });
         this.insertView('ul.feed-list', view);
         view.render();
