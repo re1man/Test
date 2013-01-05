@@ -81,9 +81,11 @@ function getFeed(req,res){
         var allMessages = {};
         allMessages.messages = [];
         function getValues(key, done) {
+            var myId = null;
+            if (req.session.user) myId = req.session.user.id;
             userDb.hmget(key, 'messages', function(err, msgs){
                 var userMessages = {};
-                if (key !== req.session.user.id){
+                if (key !== myId){
                     userMessages[key] = JSON.parse(msgs);
                     allMessages.messages.push(userMessages);
                 } else {

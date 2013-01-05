@@ -358,10 +358,10 @@ function(app,Spinner) {
                 $('.user-posting-section').find('.sticky').addClass('user-sticky');
                 $('.user-posting-section').show();
                 self.getMessages(data);
-                self.beat();
               });
           });
         }
+        self.beat();
       });
 
       this.contentEditable = $('.user-shout');
