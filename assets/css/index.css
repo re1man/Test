@@ -266,9 +266,16 @@ ul.feed-tabs li a i {
 hr{
 	margin:10px;
 }
-.list-box .user-sticky .post-shout, .list-box .shop-sticky .post-shout, .list-box .other-user-sticky .post-shout, .list-box .user-sticky .post-comment{
+.list-box .user-sticky .post-shout, .list-box .shop-sticky .post-shout, 
+.list-box .other-user-sticky .post-shout, 
+.list-box .user-sticky .post-comment, .list-box .comment-sticky .post-shout{
 	display:none;
 }
-.list-box .user-sticky.pre-edit-shout .post-shout, .list-box .shop-sticky.pre-edit-shout .post-shout{
+.list-box .user-sticky.pre-edit-shout .post-shout, 
+.list-box .comment-sticky.pre-edit-shout .post-shout, 
+.list-box .shop-sticky.pre-edit-shout .post-shout{
 	display:inline-block;
 }  
+.list-box .comment-sticky .post-comment{
+	display:none;
+}

@@ -21,11 +21,31 @@ function(app,Spinner) {
     template: 'app/templates/layouts/listBox',
     tagName: 'li',
     className: 'list-box',
+    events: {
+      'click .post-comment': 'postComment'
+    },
     beforeRender: function(){
       this.int = this.options.userMessage.get('userId');
       $(this.el).attr('user-id', this.options.userMessage.get('userId'));
       $(this.el).attr('message-index', this.options.userMessage.get('index'));
       this.insertView(new Feed.User({model: this.options.userMessage, index: this.options.userMessage.get('index')}));
+    },
+    postComment: function(){
+      if ($(this.el).find('.comment-sticky').length > 0 || this.options.userMessage.get('comment-user')){
+        return false;
+      }
+        var model = new Feed.Model({
+          index: this.options.userMessage.get('index'),
+          msg: "Post Comment",
+          userId: this.options.userMessage.get('userId')
+        });
+        var view = new Feed.User({
+          model: model,
+          index: this.options.userMessage.get('index'),
+          otherUser: Feed.userId
+        });
+        this.insertView(view);
+        view.render();
     }
   });
 
@@ -48,13 +68,14 @@ function(app,Spinner) {
     beforeRender: function(){
       if (this.model.get('userId') === Feed.userId){
         $(this.el).addClass('user-sticky');
-        
+      } else if (this.options.otherUser) {
+        $(this.el).addClass('comment-sticky');
       } else {
         $(this.el).addClass('other-user-sticky');
       }
     },
     afterRender: function(){
-      if (this.model.get('userId') === Feed.userId){
+      if (this.model.get('userId') === Feed.userId || this.options.otherUser){
         this.contentEditable = $(this.el).find('.user-messaged');
         $(this.el).find('.user-messaged').attr('contenteditable', 'true');
         if (!Modernizr.touch) $(this.el).find('.post-shout').tooltip({placement: 'right'});
@@ -62,6 +83,9 @@ function(app,Spinner) {
         $(this.el).popover({placement: 'top', trigger: 'manual'});
       } else {
         if (!Modernizr.touch) $(this.el).find('.post-comment').tooltip({placement: 'right'});
+      }
+      if (this.options.otherUser) {
+        $(this.el).find('.user-messaged').addClass('pre-shout');
       }
     },
     events: {
@@ -90,7 +114,9 @@ function(app,Spinner) {
       if (text === this.shoutPlaceholder){
         $(e.currentTarget).text('');
         $(e.currentTarget).parent().addClass('pre-edit-shout');
+        if (this.options.otherUser) $(e.currentTarget).text('').removeClass('pre-shout');
       }
+
       this.check_charcount(this.max, e);
       $(this.el).popover('hide');
     },
@@ -98,6 +124,9 @@ function(app,Spinner) {
       var text = $(e.currentTarget).text().trim();
       $(e.currentTarget).text(this.shoutPlaceholder);
       $(e.currentTarget).parent().removeClass('pre-edit-shout');
+      if (text.length === 0 && this.options.otherUser) {
+        $(e.currentTarget).text(this.shoutPlaceholder).addClass('pre-shout');
+      }
     },
     postShout: function(){
       var userMessaged = $(this.el).find('.user-messaged');
@@ -272,6 +301,7 @@ function(app,Spinner) {
         if (yourMessages[i]) {
           this.makeUserView(Feed.userId,yourMessages[i], i);
         }
+
         
         //yours
         if (otherMessages[i]){
@@ -311,8 +341,9 @@ function(app,Spinner) {
     makeUserView: function(userId, msg, index){
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         var elem = $('.list-box[user-id='+userId+']'+'[message-index='+index+']');
-        if (elem.find('.user-messaged').text().trim() !== msg.msg) {
-          elem.find('.user-messaged').fadeOut('fast', function(){
+        var mes = elem.find('.user-messaged').not('.comment-sticky > .user-messaged');
+        if (mes.text().trim() !== msg.msg) {
+          mes.fadeOut('fast', function(){
             $(this).text(msg.msg).fadeIn('fast');
           });
         }
@@ -352,6 +383,8 @@ function(app,Spinner) {
         FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {
                 check();
+            } else {
+              self.beat();
             }
         });
         function check(){
@@ -365,7 +398,7 @@ function(app,Spinner) {
               });
           });
         }
-        self.beat();
+        
       });
 
       this.contentEditable = $('.user-shout');
