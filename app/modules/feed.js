@@ -279,7 +279,7 @@ function(app,Spinner) {
       if (total === 0) return false;
       for (var i = 0; i < total; i++){
         //mine
-        if (Feed.userId,yourMessages[i]) {
+        if (yourMessages[i]) {
           this.makeUserView(Feed.userId,yourMessages[i], i);
         }
         
