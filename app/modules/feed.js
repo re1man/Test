@@ -26,26 +26,49 @@ function(app,Spinner) {
     },
     beforeRender: function(){
       this.int = this.options.userMessage.get('userId');
+      var userId = this.options.userMessage.get('userId');
+      var index = this.options.userMessage.get('index');
       $(this.el).attr('user-id', this.options.userMessage.get('userId'));
       $(this.el).attr('message-index', this.options.userMessage.get('index'));
-      this.insertView(new Feed.User({model: this.options.userMessage, index: this.options.userMessage.get('index')}));
+      Feed[userId][index].user = new Feed.User({model: this.options.userMessage, index: index});
+      this.insertView(Feed[userId][index].user);
+      if (this.options.comment) {
+        var model = this.commentModel(this.options.comment.msg);
+        Feed[userId][index].comment = new Feed.User({model: model, index: index,otherUser: this.options.comment.id});
+        this.insertView(Feed[userId][index].comment);
+      }
+    },
+    commentModel: function(msg){
+      var model = new Feed.Model({
+            index: this.options.userMessage.get('index'),
+            msg: msg,
+            userId: this.options.userMessage.get('userId')
+          });
+      return model;
     },
     postComment: function(){
-      if ($(this.el).find('.comment-sticky').length > 0 || this.options.userMessage.get('comment-user')){
+      if ($(this.el).find('.comment-sticky, .my-comment-sticky').length > 0 || this.options.userMessage.get('comment-user')){
         return false;
       }
-        var model = new Feed.Model({
-          index: this.options.userMessage.get('index'),
-          msg: "Post Comment",
-          userId: this.options.userMessage.get('userId')
-        });
+      if (!Feed.userId){
+         $('a[href="#shout"]').click();
+         return false;
+      }
+        var model = this.commentModel("Post Comment");
+
         var view = new Feed.User({
           model: model,
           index: this.options.userMessage.get('index'),
-          otherUser: Feed.userId
+          otherUser: Feed.userId,
+          initial: model.get('msg')
         });
         this.insertView(view);
         view.render();
+    },
+    afterRender: function(){
+      if ($(this.el).find('.comment-sticky, .my-comment-sticky').length > 0 || this.options.userMessage.get('comment-user')){
+        $('.post-comment').remove();
+      }
     }
   });
 
@@ -66,16 +89,18 @@ function(app,Spinner) {
       return this.model.toJSON();
     },
     beforeRender: function(){
-      if (this.model.get('userId') === Feed.userId){
+      if (this.model.get('userId') === Feed.userId && !this.options.otherUser){
         $(this.el).addClass('user-sticky');
-      } else if (this.options.otherUser) {
+      } else if (this.options.otherUser && this.options.otherUser !== Feed.userId) {
         $(this.el).addClass('comment-sticky');
+      } else if (this.options.otherUser && this.options.otherUser === Feed.userId){
+        $(this.el).addClass('my-comment-sticky');
       } else {
         $(this.el).addClass('other-user-sticky');
       }
     },
     afterRender: function(){
-      if (this.model.get('userId') === Feed.userId || this.options.otherUser){
+      if ((this.model.get('userId') === Feed.userId && !this.options.otherUser) || (this.options.otherUser === Feed.userId)){
         this.contentEditable = $(this.el).find('.user-messaged');
         $(this.el).find('.user-messaged').attr('contenteditable', 'true');
         if (!Modernizr.touch) $(this.el).find('.post-shout').tooltip({placement: 'right'});
@@ -84,8 +109,8 @@ function(app,Spinner) {
       } else {
         if (!Modernizr.touch) $(this.el).find('.post-comment').tooltip({placement: 'right'});
       }
-      if (this.options.otherUser) {
-        $(this.el).find('.user-messaged').addClass('pre-shout');
+      if (this.options.otherUser === Feed.userId) {
+        if (this.options.initial === this.model.get('msg')) $(this.el).find('.user-messaged').addClass('pre-shout');
       }
     },
     events: {
@@ -111,9 +136,9 @@ function(app,Spinner) {
     },
     focusShout: function(e){
       var text = $(e.currentTarget).text().trim();
-      if (text === this.shoutPlaceholder){
+      $(e.currentTarget).parent().addClass('pre-edit-shout');
+      if (text === this.options.initial){
         $(e.currentTarget).text('');
-        $(e.currentTarget).parent().addClass('pre-edit-shout');
         if (this.options.otherUser) $(e.currentTarget).text('').removeClass('pre-shout');
       }
 
@@ -122,9 +147,9 @@ function(app,Spinner) {
     },
     blurShout: function(e){
       var text = $(e.currentTarget).text().trim();
-      $(e.currentTarget).text(this.shoutPlaceholder);
       $(e.currentTarget).parent().removeClass('pre-edit-shout');
       if (text.length === 0 && this.options.otherUser) {
+        $(e.currentTarget).text(this.shoutPlaceholder);
         $(e.currentTarget).text(this.shoutPlaceholder).addClass('pre-shout');
       }
     },
@@ -136,16 +161,27 @@ function(app,Spinner) {
         var target = userMessaged[0];
         var spinner = new Spinner(window.spinnerOpts).spin(target);
         userMessaged.attr('contenteditable', 'false');
-        $.post('userShout', {msg: userMessaged.text(), index:self.options.index}, function(res){
-          if (!res.msgs){
-            userMessaged.parent().popover('show');
-          } else{
-            self.model.set('msg', userMessaged.text());
-          }
-          userMessaged.parent().removeClass('pre-edit-shout');
-          userMessaged.attr('contenteditable', 'true');
-        });
+        if (this.options.otherUser){
+          $.post('userShout', {msg: userMessaged.text(), userId: self.model.get('userId'), index:self.options.index, otherUser: self.options.otherUser}, function(res){
+            self.afterPost(res, userMessaged);
+          });
+        } else {
+          $.post('userShout', {msg: userMessaged.text(), index:self.options.index}, function(res){
+            self.afterPost(res, userMessaged);
+          });
+        }
+        
       }
+    },
+    afterPost: function(res, userMessaged){
+      if (!res.msgs){
+        userMessaged.parent().popover('show');
+      } else{
+        this.model.set('msg', userMessaged.text());
+      }
+      userMessaged.parent().removeClass('pre-edit-shout');
+      userMessaged.removeClass('pre-shout');
+      userMessaged.attr('contenteditable', 'true');
     }
   });
 
@@ -340,20 +376,33 @@ function(app,Spinner) {
     },
     makeUserView: function(userId, msg, index){
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
-        var elem = $('.list-box[user-id='+userId+']'+'[message-index='+index+']');
-        var mes = elem.find('.user-messaged').not('.comment-sticky > .user-messaged');
-        if (mes.text().trim() !== msg.msg) {
-          mes.fadeOut('fast', function(){
-            $(this).text(msg.msg).fadeIn('fast');
-          });
+        if (msg.msg !== Feed[userId][index].user.model.get('msg')){
+          Feed[userId][index].user.model.set('msg', msg.msg);
+        }
+        if (msg.otherUser){
+          if (!Feed[userId][index].comment){
+            var model = new Feed.Model({
+              index: index,
+              msg: msg.otherUser.msg,
+              userId: userId
+            });
+            Feed[userId][index].comment = new Feed.User({model: model, index: index,otherUser: msg.otherUser.id});
+            this.insertView('.list-box[user-id='+userId+']'+'[message-index='+index+']', Feed[userId][index].comment);
+            Feed[userId][index].comment.render();
+          } else if (msg.otherUser.msg !== Feed[userId][index].comment.model.get('msg')){
+            Feed[userId][index].comment.model.set('msg', msg.otherUser.msg);
+          }
+          
         }
       } else {
         if (!msg.msg) return false;
-        var view = new Feed.ListBox({
-          userMessage: new Feed.Model({msg: msg.msg, userId: userId, index:index})
+        if (!Feed[userId]) Feed[userId] = {};
+        Feed[userId][index] = new Feed.ListBox({
+          userMessage: new Feed.Model({msg: msg.msg, userId: userId, index:index}),
+          comment: msg.otherUser
         });
-        this.insertView('ul.feed-list', view);
-        view.render();
+        this.insertView('ul.feed-list', Feed[userId][index]);
+        Feed[userId][index].render();
       }
       
     },
@@ -383,9 +432,8 @@ function(app,Spinner) {
         FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {
                 check();
-            } else {
-              self.beat();
             }
+            self.beat();
         });
         function check(){
           FB.api('/me', function(res){

@@ -26,12 +26,15 @@ app.get('/feed', function(req, res){
     getFeed(req,res);
 });
 app.post('/userShout', function(req, res){
+    if (!req.session.user) res.send(404);
     if (req.body.msg.length > 140){
         res.send(new Error('Message is too long'));
     } else if(!req.session.user){
         res.send(404);
+    } else if (req.body.otherUser){
+        setUserMessage(req.body.userId, req.body.msg,req, res, req.body.index, req.body.otherUser);
     } else {
-        setUserMessage(req.session.user.id, req.body.msg, res, req.body.index);
+        setUserMessage(req.session.user.id, req.body.msg,req, res, req.body.index);
     }
 });
 
@@ -114,17 +117,18 @@ function getFeed(req,res){
     
 });
 }
-function setUserMessage(userId, mess, res,index){
+function setUserMessage(userId, mess, req, res,index, otherUser){
     async.waterfall([
     function(callback){
         var messages;
+
         userDb.hmget(userId, 'messages', function(err, msgs){
             messages = msgs;
-            callback(null, messages, index);
+            callback(null, messages, index, otherUser);
         });
         
     },
-    function(messages, index, callback){
+    function(messages, index,otherUser, callback){
         var msgs;
         if (!messages[0]){
             msgs = [];
@@ -132,7 +136,20 @@ function setUserMessage(userId, mess, res,index){
         } else {
             msgs = JSON.parse(messages);
         }
-        if (index && msgs[index]) {
+        if (otherUser && index && msgs[index]){
+            
+            if (msgs[index].otherUser){
+                if (msgs[index].otherUser.id !== req.session.user.id){
+                    callback(null, 404, 404);
+                } else {
+                    msgs[index].otherUser.msg = mess;
+                }
+            } else {
+                msgs[index].otherUser = {};
+                msgs[index].otherUser.id = req.session.user.id;
+                msgs[index].otherUser.msg = mess;
+            }
+        } else if (index && msgs[index]) {
             msgs[index].msg = mess;
         } else {
             var _msg = {};
@@ -140,6 +157,7 @@ function setUserMessage(userId, mess, res,index){
             msgs.push(_msg);
             var index = msgs.length - 1;
         }
+        
         var _msgs = JSON.stringify(msgs);
         userDb.hmset(userId, 'messages', _msgs);
         callback(null, msgs, index);
