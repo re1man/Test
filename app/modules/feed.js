@@ -181,16 +181,6 @@ function(app,Spinner) {
         $.post('userShout', {msg: $('.user-shout').text()}, function(res){
           if (!res.msgs){
             $('.user-shout').popover('show');
-          } else{
-            var view = new Feed.ListBox({
-              // Prepend the element instead of append.
-                userMessage: new Feed.Model({msg: $('.user-shout').text(), userId: Feed.userId, index:res.index}),
-                append: function(root, child) {
-                  $(root).prepend(child);
-                }
-            });
-            self.insertView('ul.feed-list', view);
-            view.render();
           }
           $('.user-shout').text(self.shoutPlaceholder).addClass('pre-shout');
           $('.post-shout').show();
@@ -302,6 +292,15 @@ function(app,Spinner) {
     },
     moreMessages: function(data){
       var self = this;
+      var yourMessages;
+      if (data.yourMessages){
+        yourMessages = data.yourMessages.reverse();
+      } else {
+        yourMessages = [];
+      }
+      _.each(yourMessages, function(yourmessage, i){
+        self.makeUserView(Feed.userId,yourmessage, i);
+      });
       _.each(data.messages, function(message){
         for (var property in message) {
           self._makeUserView(message, property);
