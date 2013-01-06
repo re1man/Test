@@ -106,6 +106,11 @@ function(app,Spinner) {
         if (!Modernizr.touch) $(this.el).find('.post-shout').tooltip({placement: 'right'});
         $(this.el).attr('data-content', "There was an error. Please try again.");
         $(this.el).popover({placement: 'top', trigger: 'manual'});
+        if (this.options.otherUser === Feed.userId && this.options.initial){
+          $(this.el).find('.remove-comment').css('display', 'inline-block');
+          if (!Modernizr.touch) $(this.el).find('.remove-comment').tooltip({placement: 'right'});
+
+        }
       } else {
         if (!Modernizr.touch) $(this.el).find('.post-comment').tooltip({placement: 'right'});
       }
@@ -118,7 +123,11 @@ function(app,Spinner) {
       'blur .user-messaged': 'blurShout',
       'keyup .user-messaged': 'checkText',
       'keydown .user-messaged': 'checkText',
-      'click .post-shout': 'postShout'
+      'click .post-shout': 'postShout',
+      'click .remove-comment': 'removeView'
+    },
+    removeView: function(){
+      this.remove();
     },
     checkText: function(e){
       if (e.keyCode === 13){

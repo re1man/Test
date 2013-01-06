@@ -150,9 +150,15 @@ ul.feed-tabs li a i {
 }
 .post-shout, .post-comment{
 	position: relative;
-	top: -14px;
+	top: -42px;
+	left: 160px;
+	cursor: pointer;
+}
+.remove-comment{
+	position: relative;
 	left: 180px;
 	cursor: pointer;
+	display:none;
 }
 .no-touch .desktop{
 	display:inline-block;
