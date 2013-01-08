@@ -104,14 +104,14 @@ function getFeed(req,res, admin){
             });
     },
     function(keys, callback){
+        if (keys.length === 0){
+            callback(null, 200); 
+            return false;
+        }
         if (req.session.user.admin && keys.length === 0){
             var data = {};
             data.adminId = req.session.user.id;
             callback(null, data);
-            return false;
-        }
-        if (keys.length === 0){
-            callback(null, 200); 
             return false;
         }
         var allMessages = {};

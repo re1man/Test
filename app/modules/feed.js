@@ -485,6 +485,9 @@ function(app,Spinner) {
               if (response.status === 'connected') {
                   check();
               }
+              setTimeout(function(){
+                self.beat('/beat');
+              },3000);
              });
           });
           FB.getLoginStatus(function(response) {
