@@ -369,12 +369,12 @@ function(app,Spinner) {
       var self = this;
       var yourMessages;
       if (data.yourMessages){
-        yourMessages = data.yourMessages.reverse();
+        yourMessages = data.yourMessages;
       } else {
         yourMessages = [];
       }
       _.each(yourMessages, function(yourmessage, i){
-        self.makeUserView(Feed.userId,yourmessage, i);
+        self.makeUserView(Feed.userId,yourmessage, i, true);
       });
       _.each(data.messages, function(message){
         for (var property in message) {
@@ -383,7 +383,7 @@ function(app,Spinner) {
       });
       
     },
-    makeUserView: function(userId, msg, index){
+    makeUserView: function(userId, msg, index, prepend){
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         if (msg.msg !== Feed[userId][index].user.model.get('msg')){
           Feed[userId][index].user.model.set('msg', msg.msg);
@@ -406,10 +406,22 @@ function(app,Spinner) {
       } else {
         if (!msg.msg) return false;
         if (!Feed[userId]) Feed[userId] = {};
-        Feed[userId][index] = new Feed.ListBox({
-          userMessage: new Feed.Model({msg: msg.msg, userId: userId, index:index}),
-          comment: msg.otherUser
-        });
+        if (prepend) {
+          Feed[userId][index] = new Feed.ListBox({
+            userMessage: new Feed.Model({msg: msg.msg, userId: userId, index:index}),
+            comment: msg.otherUser,
+            append: function(root, child) {
+              $(root).prepend(child);
+            }
+          });
+        } else {
+          Feed[userId][index] = new Feed.ListBox({
+            userMessage: new Feed.Model({msg: msg.msg, userId: userId, index:index}),
+            comment: msg.otherUser
+          });
+          
+        }
+        
         this.insertView('ul.feed-list', Feed[userId][index]);
         Feed[userId][index].render();
       }
@@ -442,7 +454,10 @@ function(app,Spinner) {
             if (response.status === 'connected') {
                 check();
             }
-            self.beat();
+            setTimeout(function(){
+              self.beat();
+            },3000);
+            
         });
         function check(){
           FB.api('/me', function(res){
