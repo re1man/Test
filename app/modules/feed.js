@@ -33,16 +33,17 @@ function(app,Spinner) {
       Feed[userId][index].user = new Feed.User({model: this.options.userMessage, index: index});
       this.insertView(Feed[userId][index].user);
       if (this.options.comment) {
-        var model = this.commentModel(this.options.comment.msg);
+        var model = this.commentModel(this.options.comment.msg, this.options.comment.adminName);
         Feed[userId][index].comment = new Feed.User({model: model, index: index,otherUser: this.options.comment.id});
         this.insertView(Feed[userId][index].comment);
       }
     },
-    commentModel: function(msg){
+    commentModel: function(msg,adminName){
       var model = new Feed.Model({
             index: this.options.userMessage.get('index'),
             msg: msg,
-            userId: this.options.userMessage.get('userId')
+            userId: this.options.userMessage.get('userId'),
+            name: adminName
           });
       return model;
     },
@@ -55,7 +56,6 @@ function(app,Spinner) {
          return false;
       }
         var model = this.commentModel("Post Comment");
-
         var view = new Feed.User({
           model: model,
           index: this.options.userMessage.get('index'),
@@ -66,7 +66,7 @@ function(app,Spinner) {
         view.render();
     },
     afterRender: function(){
-      if ($(this.el).find('.comment-sticky, .my-comment-sticky').length > 0 || this.options.userMessage.get('comment-user')){
+      if ($(this.el).find('.comment-sticky, .my-comment-sticky,.comment-shop-sticky').length > 0 || this.options.userMessage.get('comment-user')){
         $('.post-comment').remove();
       }
     }
@@ -79,6 +79,7 @@ function(app,Spinner) {
     initialize: function(){
       this.shoutPlaceholder = this.model.get('msg');
       this.model.on('change', this.refresh, this);
+      if (this.model.get('userId')[0] === 'a') this.admin = true;
     },
     refresh: function(){
       this.shoutPlaceholder = this.model.get('msg');
@@ -89,6 +90,16 @@ function(app,Spinner) {
       return this.model.toJSON();
     },
     beforeRender: function(){
+      if (this.model.get('userId')[0] === 'a' && !this.options.otherUser){
+        $(this.el).addClass('shop-sticky');
+        return false;
+      }
+      if (this.options.otherUser) {
+        if (this.options.otherUser[0] === 'a'){
+          $(this.el).addClass('shop-sticky').addClass('comment-shop-sticky');
+          return false;
+        }
+      }
       if (this.model.get('userId') === Feed.userId && !this.options.otherUser){
         $(this.el).addClass('user-sticky');
       } else if (this.options.otherUser && this.options.otherUser !== Feed.userId) {
@@ -100,6 +111,14 @@ function(app,Spinner) {
       }
     },
     afterRender: function(){
+      if (this.admin && this.model.get('userId') === Feed.userId){
+        $(this.el).find('.post-comment').hide();
+      }
+      if (this.options.otherUser) {
+        if (this.options.otherUser[0] === 'a'){
+          $(this.el).find('.post-comment').hide();
+        }
+      }
       if ((this.model.get('userId') === Feed.userId && !this.options.otherUser) || (this.options.otherUser === Feed.userId)){
         this.contentEditable = $(this.el).find('.user-messaged');
         $(this.el).find('.user-messaged').attr('contenteditable', 'true');
@@ -171,8 +190,11 @@ function(app,Spinner) {
         var spinner = new Spinner(window.spinnerOpts).spin(target);
         userMessaged.attr('contenteditable', 'false');
         if (this.options.otherUser){
+          var userId = self.model.get('userId');
+          var index = self.model.get('index');
+          Feed[userId][index].comment = this;
           $.post('userShout', {msg: userMessaged.text(), userId: self.model.get('userId'), index:self.options.index, otherUser: self.options.otherUser}, function(res){
-            self.afterPost(res, userMessaged);
+            self.afterPost(res, userMessaged,res.msgs[index].otherUser.adminName);
           });
         } else {
           $.post('userShout', {msg: userMessaged.text(), index:self.options.index}, function(res){
@@ -182,11 +204,13 @@ function(app,Spinner) {
         
       }
     },
-    afterPost: function(res, userMessaged){
+    afterPost: function(res, userMessaged, adminName){
+      var self = this;
       if (!res.msgs){
         userMessaged.parent().popover('show');
       } else{
         this.model.set('msg', userMessaged.text());
+        if (adminName) this.model.set('name', adminName);
       }
       userMessaged.parent().removeClass('pre-edit-shout');
       userMessaged.removeClass('pre-shout');
@@ -257,7 +281,7 @@ function(app,Spinner) {
             $('.user-shout').popover('show');
           }
           $('.user-shout').text(self.shoutPlaceholder).addClass('pre-shout');
-          $('.post-shout').show();
+          $('.user-posting-section').find('.post-shout').show();
           $('.user-shout').attr('contenteditable', 'true');
         });
       }
@@ -393,7 +417,8 @@ function(app,Spinner) {
             var model = new Feed.Model({
               index: index,
               msg: msg.otherUser.msg,
-              userId: userId
+              userId: userId,
+              name: msg.otherUser.adminName
             });
             Feed[userId][index].comment = new Feed.User({model: model, index: index,otherUser: msg.otherUser.id});
             this.insertView('.list-box[user-id='+userId+']'+'[message-index='+index+']', Feed[userId][index].comment);
@@ -401,14 +426,14 @@ function(app,Spinner) {
           } else if (msg.otherUser.msg !== Feed[userId][index].comment.model.get('msg')){
             Feed[userId][index].comment.model.set('msg', msg.otherUser.msg);
           }
-          
         }
       } else {
+
         if (!msg.msg) return false;
         if (!Feed[userId]) Feed[userId] = {};
         if (prepend) {
           Feed[userId][index] = new Feed.ListBox({
-            userMessage: new Feed.Model({msg: msg.msg, userId: userId, index:index}),
+            userMessage: new Feed.Model({msg: msg.msg, name: msg.adminName, userId: userId, index:index}),
             comment: msg.otherUser,
             append: function(root, child) {
               $(root).prepend(child);
@@ -416,7 +441,7 @@ function(app,Spinner) {
           });
         } else {
           Feed[userId][index] = new Feed.ListBox({
-            userMessage: new Feed.Model({msg: msg.msg, userId: userId, index:index}),
+            userMessage: new Feed.Model({msg: msg.msg, name: msg.adminName, userId: userId, index:index}),
             comment: msg.otherUser
           });
           
@@ -425,15 +450,14 @@ function(app,Spinner) {
         this.insertView('ul.feed-list', Feed[userId][index]);
         Feed[userId][index].render();
       }
-      
     },
     beforeRender: function(){
       $(window).off();
     },
-    beat: function(){
+    beat: function(url){
       var self = this;
       setInterval(function(){
-        $.get('/beat', function(data){
+        $.get(url, function(data){
           self.moreMessages(data);
         });
       },500);
@@ -442,36 +466,51 @@ function(app,Spinner) {
       var self = this;
       this.checkWindow();
       $(window).on('resize', this.checkWindow);
-      require( ['facebook-api!appId:' + this.facebook_id], function(FB) {
-        $(".fb-login>img").click(function() {
-           FB.login(function (response){
-            if (response.status === 'connected') {
-                check();
-            }
-           });
-        });
-        FB.getLoginStatus(function(response) {
-            if (response.status === 'connected') {
-                check();
-            }
-            setTimeout(function(){
-              self.beat();
-            },3000);
-            
-        });
-        function check(){
-          FB.api('/me', function(res){
-              Feed.userId = res.id;
-              $.post('/logIn', {id:res.id}, function(data){
-                $('.fb-login').hide();
-                $('.user-posting-section').find('.sticky').addClass('user-sticky');
-                $('.user-posting-section').show();
-                self.getMessages(data);
-              });
+      if (this.options.admin){
+        $('.fb-login').hide();
+        setTimeout(function(){
+          self.beat('/adminBeat');
+        },3000);
+        $.post('/adminLogin', {id:'9496'}, function(data){
+                  Feed.userId = data.adminId;
+                  $('.user-posting-section').find('.sticky').addClass('shop-sticky');
+                  $('.user-posting-section').show();
+                  self.getMessages(data);
+                  
+                });
+      } else {
+        require( ['facebook-api!appId:' + this.facebook_id], function(FB) {
+          $(".fb-login>img").click(function() {
+             FB.login(function (response){
+              if (response.status === 'connected') {
+                  check();
+              }
+             });
           });
-        }
-        
-      });
+          FB.getLoginStatus(function(response) {
+              if (response.status === 'connected') {
+                  check();
+              }
+              setTimeout(function(){
+                self.beat('/beat');
+              },3000);
+              
+          });
+          function check(){
+            FB.api('/me', function(res){
+                Feed.userId = res.id;
+                $.post('/logIn', {id:res.id}, function(data){
+                  $('.fb-login').hide();
+                  $('.user-posting-section').find('.sticky').addClass('user-sticky');
+                  $('.user-posting-section').show();
+                  self.getMessages(data);
+                });
+            });
+          }
+          
+        });
+      }
+      
 
       this.contentEditable = $('.user-shout');
       $('.feed-tabs>li.active').find('i').addClass('icon-white');

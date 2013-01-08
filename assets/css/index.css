@@ -149,9 +149,9 @@ ul.feed-tabs li a i {
 	color:#505050;
 }
 .post-shout, .post-comment{
-	position: relative;
-	top: -42px;
-	left: 160px;
+	right: 10px;
+	bottom: 10px;
+	position:absolute;
 	cursor: pointer;
 }
 .remove-comment{
@@ -276,7 +276,8 @@ hr{
 .list-box .user-sticky .post-shout, .list-box .shop-sticky .post-shout, 
 .list-box .other-user-sticky .post-shout, 
 .list-box .user-sticky .post-comment, .list-box .comment-sticky .post-shout,
-.list-box .my-comment-sticky .post-shout{
+.list-box .my-comment-sticky .post-shout,
+.list-box .shop-sticky .post-shout{
 	display:none;
 }
 .list-box .user-sticky.pre-edit-shout .post-shout, 
@@ -286,4 +287,11 @@ hr{
 }  
 .list-box .comment-sticky .post-comment, .list-box .my-comment-sticky .post-comment{
 	display:none;
+}
+.sticky{
+	position:relative;
+}
+.admin-name{
+	position: absolute;
+	bottom: 0px;
 }

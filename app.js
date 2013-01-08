@@ -8,7 +8,6 @@ shopDb = redis.createClient(),
 listingDb = redis.createClient();
 var async = require('async');
 var _= require('underscore');
-
 var store = new RedisStore({db:3});
 
 
@@ -21,6 +20,9 @@ app.use(express.session({ secret: 'Amer1canBe@uty', store: store }));
 
 app.get('/', function(req, res){
 	res.sendfile(__dirname + '/index.html');
+});
+app.get('/admin', function(req, res){
+    res.sendfile(__dirname + '/index.html');
 });
 app.get('/feed', function(req, res){
     getFeed(req,res);
@@ -42,12 +44,32 @@ app.get('/beat', function(req, res){
     getFeed(req,res);
 });
 
+app.get('/adminBeat', function(req, res){
+    getFeed(req,res, true);
+});
+
+app.post('/adminLogIn', function(req, res){
+    if (!req.session.user){
+        req.session.user = {};
+        req.session.user.id = 'a' + req.body.id;
+        req.session.user.name = "John Smith";
+    }
+    if(req.session.user.id[0] === 'a'){
+        req.session.user.admin = true;
+    }
+    req.session.user.members = [];
+    getFeed(req,res, req.session.user.admin);
+});
 
 app.post('/logIn', function(req, res){
+    if(req.body.id[0] === 'a'){
+        res.send(404);
+    }
     if (!req.session.user){
         req.session.user = {};
         req.session.user.id = req.body.id;
     }
+    
     req.session.user.members = [];
     getFeed(req,res);
 });
@@ -73,7 +95,7 @@ async.waterfall([
 });
 
 
-function getFeed(req,res){
+function getFeed(req,res, admin){
     async.waterfall([
     function(callback){
             userDb.smembers('users', function(err,keys){
@@ -82,7 +104,16 @@ function getFeed(req,res){
             });
     },
     function(keys, callback){
-        if (keys.length === 0) callback(null, 200);
+        if (req.session.user.admin && keys.length === 0){
+            var data = {};
+            data.adminId = req.session.user.id;
+            callback(null, data);
+            return false;
+        }
+        if (keys.length === 0){
+            callback(null, 200); 
+            return false;
+        }
         var allMessages = {};
         allMessages.messages = [];
         function getValues(key, done) {
@@ -100,6 +131,7 @@ function getFeed(req,res){
             });
         }
         allMessages.allKeys = keys;
+        if (req.session.user.admin) allMessages.adminId = req.session.user.id;
         async.forEach(keys, getValues, function(err) {
             callback(null, allMessages);
         });
@@ -124,11 +156,11 @@ function setUserMessage(userId, mess, req, res,index, otherUser){
 
         userDb.hmget(userId, 'messages', function(err, msgs){
             messages = msgs;
-            callback(null, messages, index, otherUser);
+            callback(null, messages, index, otherUser, req);
         });
         
     },
-    function(messages, index,otherUser, callback){
+    function(messages, index,otherUser,req, callback){
         var msgs;
         if (!messages[0]){
             msgs = [];
@@ -147,6 +179,7 @@ function setUserMessage(userId, mess, req, res,index, otherUser){
             } else {
                 msgs[index].otherUser = {};
                 msgs[index].otherUser.id = req.session.user.id;
+                if (req.session.user.admin) msgs[index].otherUser.adminName = req.session.user.name;
                 msgs[index].otherUser.msg = mess;
             }
         } else if (index && msgs[index]) {
@@ -154,10 +187,10 @@ function setUserMessage(userId, mess, req, res,index, otherUser){
         } else {
             var _msg = {};
             _msg.msg = mess;
+            if (req.session.user.admin) _msg.adminName = req.session.user.name;
             msgs.push(_msg);
             var index = msgs.length - 1;
         }
-        
         var _msgs = JSON.stringify(msgs);
         userDb.hmset(userId, 'messages', _msgs);
         callback(null, msgs, index);
