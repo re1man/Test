@@ -9,7 +9,16 @@ listingDb = redis.createClient();
 var async = require('async');
 var _= require('underscore');
 var store = new RedisStore({db:3});
+var Etsy = require('etsy').Etsy;
 
+
+var api = new Etsy('mb50qip5zjvd4kf5hzi6u2ke', 'e9pfxhlm88');
+// api.getListing({
+//     listing_id: "120005219"
+// }, function(err, listing) {
+//     console.log(err);
+//     console.log(listing.results[0]);
+// });
 
 app.use("/assets", express.static(__dirname + '/assets'));
 app.use("/app", express.static(__dirname + '/app'));
