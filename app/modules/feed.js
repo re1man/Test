@@ -77,6 +77,7 @@ function(app,Spinner) {
     template: 'app/templates/layouts/user-post',
     className: 'sticky',
     initialize: function(){
+      this.max = 140;
       this.shoutPlaceholder = this.model.get('msg');
       this.model.on('change', this.refresh, this);
       if (this.model.get('userId')[0] === 'a') this.admin = true;
@@ -111,6 +112,11 @@ function(app,Spinner) {
       }
     },
     afterRender: function(){
+      if (!Modernizr.touch) {
+        this.$('.mobile').remove();
+      } else {
+        this.$('.desktop').remove();
+      }
       if (this.admin && this.model.get('userId') === Feed.userId){
         $(this.el).find('.post-comment').hide();
       }
@@ -227,7 +233,14 @@ function(app,Spinner) {
   Feed.Listing = Backbone.View.extend({
     tagName: 'li',
     className: 'listing-sticky sticky',
-    template: 'app/templates/layouts/listing-post'
+    template: 'app/templates/layouts/listing-post',
+    afterRender: function(){
+      if (!Modernizr.touch) {
+        this.$('.mobile').remove();
+      } else {
+        this.$('.desktop').remove();
+      }
+    }
   });
 
   Feed.List = Backbone.View.extend({
@@ -463,6 +476,12 @@ function(app,Spinner) {
       },500);
     },
     afterRender:function(){
+      if (!Modernizr.touch) {
+        this.$('.mobile').remove();
+      } else {
+        this.$('.desktop').remove();
+      }
+
       var self = this;
       this.checkWindow();
       $(window).on('resize', this.checkWindow);

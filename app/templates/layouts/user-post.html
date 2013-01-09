@@ -1,7 +1,20 @@
-<i class="icon-remove remove-comment" rel="tooltip" title="Cancel"></i>
+<!-- touch -->
+<button class="m-btn mini remove-comment mobile blue" type="button">Close</button>
+<!-- no-touch -->
+<i class="icon-remove remove-comment desktop" rel="tooltip" title="Cancel"></i>
+
 <div class="user-messaged">{{msg}}</div>
-<i class="icon-share-alt post-shout" rel="tooltip" title="Post!"></i>
-<i class="icon-comment post-comment" rel="tooltip" title="Comment!"></i>
+
+<!-- touch -->
+<div class ="post-shout mobile"><i class="icon-share-alt"></i></div>
+<!-- no-touch -->
+<i class="icon-share-alt post-shout desktop" rel="tooltip" title="Post!"></i>
+
+<!-- touch -->
+<div class ="post-comment mobile"><i class="icon-comment"></i></div>
+<!-- no-touch -->
+<i class="icon-comment post-comment desktop" rel="tooltip" title="Comment!"></i>
+
 {{#if name}}
 <p class="admin-name">{{name}}</p>
 {{/if}}

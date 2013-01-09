@@ -148,30 +148,40 @@ ul.feed-tabs li a i {
 	font-style: italic;
 	color:#505050;
 }
-.post-shout, .post-comment{
+.desktop.post-shout, .desktop.post-comment{
 	right: 10px;
 	bottom: 10px;
+}
+.mobile.post-shout, .mobile.post-comment{
+	height:30px;
+	width:30px;
+}
+.mobile.post-shout i, .mobile.post-comment i {
+	position: relative;
+	top: 10px;
+	left: 10px;
+}
+
+.post-shout, .post-comment{
 	position:absolute;
 	cursor: pointer;
 }
-.remove-comment{
+.desktop.remove-comment{
 	position: relative;
 	left: 180px;
+}
+.mobile.remove-comment{
+	position: relative;
+	left: 140px;
+	top: -6px;
+}
+
+.remove-comment{
+	
 	cursor: pointer;
 	display:none;
 }
-.no-touch .desktop{
-	display:inline-block;
-}
-.no-touch .mobile {
-	display: none;
-}
-.touch .desktop {
-	display: none;
-}
-.touch .mobile {
-	display:block;
-}
+
 .no-touch .close-box{
 	position: relative;
 	cursor: pointer;
@@ -294,4 +304,7 @@ hr{
 .admin-name{
 	position: absolute;
 	bottom: 0px;
+}
+.mini {
+	height:18px !important;
 }
