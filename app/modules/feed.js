@@ -512,7 +512,11 @@ function(app,Spinner, highlight) {
     updateCache: function(){
       this.rows = $('.feed-list').children('li');
       this.cache = this.rows.map(function(){
-        return $(this).find('.user-messaged').text();
+        var text = '';
+        $(this).find('.user-messaged').each(function(){
+          text = text + ' ' + $(this).text();
+        });
+        return text;
       });
       if ($('.search-box').val().trim() === ''){
         this.rows.show();
