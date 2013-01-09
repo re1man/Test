@@ -1,0 +1,56 @@
+<div class="search-shout">
+	<ul class="nav nav-tabs feed-tabs">
+		<li class="feed-tab-li">
+			<a href="#feed" data-toggle="tab" data-bypass="true">
+				<i class="icon-th-large"></i><span>Feed</span>
+			</a>
+		</li>
+		<li class="feed-tab-li">
+			<a href="#shout" data-toggle="tab" data-bypass="true">
+				<i class="icon-comment"></i><span>Shout</span>
+			</a>
+		</li>
+		<li class="feed-tab-li">
+			<a href="#search" data-toggle="tab" data-bypass="true">
+				<i class="icon-search"></i><span>Search</span>
+			</a>
+		</li>
+	</ul>
+
+	<div class="tab-content feed-tabs">
+		<div class="tab-pane" id="feed">
+			<button class="m-btn mobile close-box blue" type="button">Close</button>
+			<i class="icon-remove close-box desktop" rel="tooltip" title="Close"></i>
+			<ul class="feed-filters">
+				<li class="my-feed" title="Show My Feed"><i class="icon-user"></i></li>
+			</ul>
+		</div>
+		<div class="tab-pane" id="shout">
+			<button class="m-btn mobile close-box blue" type="button">Close</button>
+			<i class="icon-remove close-box desktop" rel="tooltip" title="Close"></i>
+			<div class="fb-login">
+				<div>Login with Facebook to make a Post or Comment. You will remain anonymous.</div>
+				<img src="/assets/img/login-with-facebook.png">
+			</div>
+			<div class="user-posting-section">
+				<div class="char-amount"></div>
+				<div class="sticky">
+					<div class="pre-shout user-shout" rel="popover" data-content="There was an error. Please try again." contenteditable="true">
+						Post something!
+					</div>
+					<i class="icon-share-alt post-shout" rel="tooltip" title="Post!"></i>
+				</div>
+			</div>
+		</div>
+		<div class="tab-pane" id="search">
+			<button class="m-btn mobile close-box blue" type="button">Close</button>
+			<i class="icon-remove close-box desktop" rel="tooltip" title="Close"></i>
+			<div class="search-input">
+				<input type="text" class="search-box" placeholder="Search">
+			</div>
+			<div class="search-slider-price"></div>
+		</div>
+	</div>
+</div>
+
+<ul class="feed-list row-fluid"></ul>
