@@ -2,11 +2,13 @@ define([
   // Application.
   "app",
   "spin",
+  "highlight",
+  "qs",
   "bootstrap"
 ],
 
 // Map dependencies from above array.
-function(app,Spinner) {
+function(app,Spinner, highlight) {
 
   // Create a new module.
   var Feed = app.module();
@@ -125,8 +127,19 @@ function(app,Spinner) {
           $(this.el).find('.post-comment').hide();
         }
       }
-      if ((this.model.get('userId') === Feed.userId && !this.options.otherUser) || (this.options.otherUser === Feed.userId)){
-        this.contentEditable = $(this.el).find('.user-messaged');
+      if ((Feed.userId && this.model.get('userId') === Feed.userId && !this.options.otherUser)){
+        this.makeEditable();
+      } else if ((Feed.userId && this.options.otherUser === Feed.userId)){
+        this.makeEditable();
+      } else {
+        if (!Modernizr.touch) $(this.el).find('.post-comment').tooltip({placement: 'right'});
+      }
+      if (this.options.otherUser === Feed.userId) {
+        if (this.options.initial === this.model.get('msg')) $(this.el).find('.user-messaged').addClass('pre-shout');
+      }
+    },
+    makeEditable: function(){
+      this.contentEditable = $(this.el).find('.user-messaged');
         $(this.el).find('.user-messaged').attr('contenteditable', 'true');
         if (!Modernizr.touch) $(this.el).find('.post-shout').tooltip({placement: 'right'});
         $(this.el).attr('data-content', "There was an error. Please try again.");
@@ -136,12 +149,6 @@ function(app,Spinner) {
           if (!Modernizr.touch) $(this.el).find('.remove-comment').tooltip({placement: 'right'});
 
         }
-      } else {
-        if (!Modernizr.touch) $(this.el).find('.post-comment').tooltip({placement: 'right'});
-      }
-      if (this.options.otherUser === Feed.userId) {
-        if (this.options.initial === this.model.get('msg')) $(this.el).find('.user-messaged').addClass('pre-shout');
-      }
     },
     events: {
       'focus .user-messaged': 'focusShout',
@@ -258,7 +265,14 @@ function(app,Spinner) {
       'blur .user-shout': 'blurShout',
       'keyup .user-shout': 'checkText',
       'keydown .user-shout': 'checkText',
-      'click .my-feed': 'myFeed'
+      'click .my-feed': 'myFeed',
+      'keyup .search-box': 'search'
+    },
+    search: function(e){
+      var q = $(e.currentTarget).val().trim();
+      if (this.searchShouts){
+        this.filter(q);
+      }
     },
     initialize: function(){
       this.shoutPlaceholder = "Post something!";
@@ -472,10 +486,41 @@ function(app,Spinner) {
       setInterval(function(){
         $.get(url, function(data){
           self.moreMessages(data);
+          self.updateCache();
         });
       },500);
     },
+    filter: function(term){
+      var scores = [];
+      var self = this;
+      if ( !term ) {
+        this.rows.show();
+      } else {
+        this.rows.hide();
+        this.rows.unhighlight();
+        this.cache.each(function(i){
+          var score = this.score(term);
+          if (score > 0) { scores.push([score, i]); }
+        });
+
+        jQuery.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
+          $(self.rows[ this[1] ]).show();
+          $(self.rows[ this[1] ]).highlight(term);
+        });
+      }
+    },
+    updateCache: function(){
+      this.rows = $('.feed-list').children('li');
+      this.cache = this.rows.map(function(){
+        return $(this).find('.user-messaged').text();
+      });
+      if ($('.search-box').val().trim() === ''){
+        this.rows.show();
+        this.rows.unhighlight();
+      }
+    },
     afterRender:function(){
+        
       if (!Modernizr.touch) {
         this.$('.mobile').remove();
       } else {
@@ -492,10 +537,11 @@ function(app,Spinner) {
         },3000);
         $.post('/adminLogin', {id:'9496'}, function(data){
                   Feed.userId = data.adminId;
+                  self.searchShouts = true;
                   $('.user-posting-section').find('.sticky').addClass('shop-sticky');
                   $('.user-posting-section').show();
                   self.getMessages(data);
-                  
+                  self.updateCache();
                 });
       } else {
         require( ['facebook-api!appId:' + this.facebook_id], function(FB) {
@@ -526,6 +572,7 @@ function(app,Spinner) {
                   $('.user-posting-section').find('.sticky').addClass('user-sticky');
                   $('.user-posting-section').show();
                   self.getMessages(data);
+                  self.updateCache();
                 });
             });
           }

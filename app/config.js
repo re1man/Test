@@ -21,7 +21,9 @@ require.config({
     'spin':'../assets/js/plugins/spin',
     'spinnerOpts':'../assets/js/plugins/spinnerOpts',
     'modernizr': '../assets/js/libs/modernizr.custom.95716',
-    'backbone-touch':'../assets/js/plugins/backbone.touch'
+    'backbone-touch':'../assets/js/plugins/backbone.touch',
+    'qs': '../assets/js/libs/qs_score',
+    "highlight": '../assets/js/plugins/jquery.highlight'
   },
 
   shim: {

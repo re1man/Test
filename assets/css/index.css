@@ -308,3 +308,6 @@ hr{
 .mini {
 	height:18px !important;
 }
+.highlight {
+    background-color: #FFFF88;
+}

@@ -105,10 +105,10 @@ function getFeed(req,res, admin){
     },
     function(keys, callback){
         if (keys.length === 0){
-            callback(null, 200); 
+            callback(null, 200);
             return false;
         }
-        if (req.session.user.admin && keys.length === 0){
+        if (req.session.user && req.session.user.admin && keys.length === 0){
             var data = {};
             data.adminId = req.session.user.id;
             callback(null, data);
@@ -131,7 +131,7 @@ function getFeed(req,res, admin){
             });
         }
         allMessages.allKeys = keys;
-        if (req.session.user.admin) allMessages.adminId = req.session.user.id;
+        if (req.session.user && req.session.user.admin) allMessages.adminId = req.session.user.id;
         async.forEach(keys, getValues, function(err) {
             callback(null, allMessages);
         });
@@ -171,7 +171,7 @@ function setUserMessage(userId, mess, req, res,index, otherUser){
         if (otherUser && index && msgs[index]){
             
             if (msgs[index].otherUser){
-                if (msgs[index].otherUser.id !== req.session.user.id){
+                if (req.session.user && msgs[index].otherUser.id !== req.session.user.id){
                     callback(null, 404, 404);
                 } else {
                     msgs[index].otherUser.msg = mess;
@@ -179,7 +179,7 @@ function setUserMessage(userId, mess, req, res,index, otherUser){
             } else {
                 msgs[index].otherUser = {};
                 msgs[index].otherUser.id = req.session.user.id;
-                if (req.session.user.admin) msgs[index].otherUser.adminName = req.session.user.name;
+                if (req.session.user && req.session.user.admin) msgs[index].otherUser.adminName = req.session.user.name;
                 msgs[index].otherUser.msg = mess;
             }
         } else if (index && msgs[index]) {
@@ -187,7 +187,7 @@ function setUserMessage(userId, mess, req, res,index, otherUser){
         } else {
             var _msg = {};
             _msg.msg = mess;
-            if (req.session.user.admin) _msg.adminName = req.session.user.name;
+            if (req.session.user && req.session.user.admin) _msg.adminName = req.session.user.name;
             msgs.push(_msg);
             var index = msgs.length - 1;
         }
