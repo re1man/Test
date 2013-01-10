@@ -331,3 +331,6 @@ hr{
 .shop-list li:hover{
 	background: #F06D61;
 }
+.loading-list{
+	display: none;
+}

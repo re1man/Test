@@ -560,7 +560,6 @@ function(app,Spinner, highlight) {
         },3000);
 
             if (this.options.admin){
-              console.log('hi');
               $('.etsy-auth').click(function(){
                 
                   $.ajax({
@@ -575,6 +574,11 @@ function(app,Spinner, highlight) {
                     });
               });
             } else if (this.options.showShops) {
+              $('.search-input').hide();
+              $('.loading-list').show();
+              $('a[href="#search"]').click();
+              var target = $('.feed-list')[0];
+              var spinner = new Spinner(window.spinnerOpts).spin(target);
                   $.ajax({
                     type: "GET",
                     url: '/getShops',
@@ -583,6 +587,9 @@ function(app,Spinner, highlight) {
                       $('.etsy-login').remove();
                       $('.shop-info').show();
                       $('a[href="#shout"]').click();
+                      $('.search-input').show();
+                      $('.loading-list').remove();
+                      $('.spinner').remove();
                       etsyAuth(data);
                     },
                     error: function(){

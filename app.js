@@ -122,7 +122,7 @@ app.get('/getShops', function(req,res){
     },
     function(shopIds, callback){
         var allListings = [];
-        
+        var allListingsClean = [];
         var index = 0;
         var _key;
         function getFirstListing(key, done) {
@@ -169,7 +169,38 @@ app.get('/getShops', function(req,res){
         
 
         async.forEach(shopIds, getFirstListing, function(err) {
-            callback(null, allListings);
+            _.each(allListings, function(listing){
+                var item = {};
+                item.listing_id = listing.listing_id;
+                item.title = listing.title;
+                item.description = listing.description;
+                item.style = listing.style;
+                item.tags = listing.tags;
+                item.url = listing.url;
+                allListingsClean.push(item);
+            });
+            callback(null, allListingsClean);
+        });
+    },
+    function(allListingsClean, callback){
+        allListingsFinal = [];
+        function getListingsImage(listing, done) {
+            etsyAuth.getProtectedResource(
+            "http://openapi.etsy.com/v2/private/listings/"+listing.listing_id+"/images", 
+            "GET", 
+            req.session.oauth.access_token, 
+            req.session.oauth.access_token_secret,
+            function (error, data, response) {
+                var dat = JSON.parse(data);
+                listing.image = dat.results[0].url_170x135;
+                allListingsFinal.push(listing);
+                done();
+                
+            });
+        }
+
+        async.forEach(allListingsClean, getListingsImage, function(err) {
+            callback(null, allListingsFinal);
         });
     }
 ], function (err, result) {
