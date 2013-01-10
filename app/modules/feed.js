@@ -233,14 +233,21 @@ function(app,Spinner, highlight) {
 
   Feed.Shop = Backbone.View.extend({
     tagName: 'li',
-    className: 'shop-sticky sticky',
-    template: 'app/templates/layouts/shop-post'
+    className: 'shop-select',
+    template: 'app/templates/layouts/shop-post',
+    serialize: function(){
+      return this.model.toJSON();
+    }
+
   });
 
   Feed.Listing = Backbone.View.extend({
     tagName: 'li',
     className: 'listing-sticky sticky',
     template: 'app/templates/layouts/listing-post',
+    serialize: function(){
+      return this.model.toJSON();
+    },
     afterRender: function(){
       if (!Modernizr.touch) {
         this.$('.mobile').remove();
@@ -486,7 +493,9 @@ function(app,Spinner, highlight) {
       setInterval(function(){
         $.get(url, function(data){
           self.moreMessages(data);
-          self.updateCache();
+          if (self.searchShouts){
+            self.updateCache();
+          }
         });
       },500);
     },
@@ -534,20 +543,62 @@ function(app,Spinner, highlight) {
       var self = this;
       this.checkWindow();
       $(window).on('resize', this.checkWindow);
-      if (this.options.admin){
-        $('.fb-login').hide();
+
+      function etsyAuth(){
+            Feed.userId = data.adminId;
+            self.searchShouts = true;
+            $('.user-posting-section').find('.sticky').addClass('shop-sticky');
+            $('.user-posting-section').show();
+            self.getMessages(data);
+            self.updateCache();
+      }
+
+      if (this.options.admin || this.options.showShops){
+        $('.fb-login').remove();
         setTimeout(function(){
           self.beat('/adminBeat');
         },3000);
-        $.post('/adminLogin', {id:'9496'}, function(data){
-                  Feed.userId = data.adminId;
-                  self.searchShouts = true;
-                  $('.user-posting-section').find('.sticky').addClass('shop-sticky');
-                  $('.user-posting-section').show();
-                  self.getMessages(data);
-                  self.updateCache();
-                });
+
+            if (this.options.admin){
+              console.log('hi');
+              $('.etsy-auth').click(function(){
+                
+                  $.ajax({
+                    type: "POST",
+                    url: '/auth',
+                    success: function(data){
+                      window.location = data;
+                    },
+                    error: function(){
+                      
+                    }
+                    });
+              });
+            } else if (this.options.showShops) {
+                  $.ajax({
+                    type: "GET",
+                    url: '/getShops',
+                    success: function(data){
+                      $('.etsy-login').remove();
+                      $('.shop-info').show();
+                      $('a[href="#shout"]').click();
+                      _.each(data.results, function(shop){
+                        var model = new Feed.Model({shop_id: shop.shop_id, name:shop.shop_name});
+                        var view = new Feed.Shop({model: model});
+                        self.insertView('.shop-list', view);
+                        view.render();
+                      });
+                    },
+                    error: function(){
+                      
+                    }
+                    });
+            }
+              
+              
+                
       } else {
+        $('.etsy-login').remove();
         require( ['facebook-api!appId:' + this.facebook_id], function(FB) {
           $(".fb-login>img").click(function() {
              FB.login(function (response){

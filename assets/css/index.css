@@ -224,16 +224,19 @@ ul.feed-tabs li a i {
 .center{
 	text-align: center;
 }
-.fb-login{
+.fb-login, .etsy-login{
 	text-align: center;
 	margin-top:50px;
 }
 .user-posting-section{
 	display:none;
 }
-.fb-login img{
+.fb-login img, .etsy-login img{
 	cursor: pointer;
 	margin-top:20px;
+}
+.etsy-login img{
+	width:100px;
 }
 .feed-list{
 	margin:0;
@@ -310,4 +313,21 @@ hr{
 }
 .highlight {
     background-color: #FFFF88;
+}
+.shop-list, .shop-info{
+	margin:auto;
+	text-align: center;
+	margin-top: 20px;
+	width: 50%;
+}
+.shop-info{
+	display: none;
+}
+.shop-list li {
+	list-style-type: none;
+	cursor: pointer;
+	padding:20px;
+}
+.shop-list li:hover{
+	background: #F06D61;
 }
