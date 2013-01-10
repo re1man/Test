@@ -243,10 +243,12 @@ function(app,Spinner, highlight) {
 
   Feed.Listing = Backbone.View.extend({
     tagName: 'li',
-    className: 'listing-sticky sticky',
+    className: 'listing-sticky sticky listing-item',
     template: 'app/templates/layouts/listing-post',
     serialize: function(){
-      return this.model.toJSON();
+      var mod = this.model.toJSON();
+      mod.title = $.trim(mod.title).substring(0, 30).trim(this) + "...";
+      return mod;
     },
     afterRender: function(){
       if (!Modernizr.touch) {
@@ -325,7 +327,7 @@ function(app,Spinner, highlight) {
     closeBox: function(){
       $('.feed-tabs>li.active').find('i').removeClass('icon-white');
       $('.active').removeClass('active');
-      $('.feed-list').removeClass('move-down');
+      $('.feed-list, .search-list').removeClass('move-down');
     },
     checkText: function(e){
       if (e.keyCode === 13){
@@ -357,7 +359,7 @@ function(app,Spinner, highlight) {
     resetIcon: function(e){
       if (!$(e.currentTarget).parent().hasClass('active')){
         $('.feed-tabs>li.active').find('i').removeClass('icon-white');
-        $('.feed-list').addClass('move-down');
+        $('.feed-list, .search-list').addClass('move-down');
       }
     },
     focusShout: function(e){
@@ -571,7 +573,6 @@ function(app,Spinner, highlight) {
                     type: "GET",
                     url: '/getShops',
                     success: function(data){
-                      console.log(data);
                       Feed.userId = data.adminId;
                       $('.etsy-login').remove();
                       $('.shop-info').show();
@@ -585,6 +586,12 @@ function(app,Spinner, highlight) {
                       setTimeout(function(){
                         self.beat('/adminBeat');
                       },3000);
+                      _.each(data.listings, function(listing){
+                        var model= new Feed.Model(listing);
+                        var view = new Feed.Listing({model: model});
+                        self.insertView('.search-list', view);
+                        view.render();
+                      });
                     },
                     error: function(){
                       

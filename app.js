@@ -179,6 +179,7 @@ app.get('/getShops', function(req,res){
                             var item = {};
                             item.listing_id = listing.listing_id;
                             item.title = listing.title;
+                            item.price = listing.price;
                             item.description = listing.description;
                             item.style = listing.style;
                             item.tags = listing.tags;
