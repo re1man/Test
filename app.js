@@ -101,7 +101,7 @@ app.get('/auth/etsy/callback', function(req, res, next){
 
 app.get('/getShops', function(req,res){
     listingDb.hmget(req.session.user.id, 'listings', function(err, listings){
-        if (listings){
+        if (listings[0]){
             var result = {};
             result.listings = JSON.parse(listings);
             result.adminId = req.session.user.id;
