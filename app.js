@@ -141,11 +141,9 @@ app.get('/getShops', function(req,res){
                     count[i] = e;
                     e = e + 50;
                 }
-                console.log(count);
                 _.each(dat.results, function(result){
                     allListings.push(result);
                 });
-                console.log(count);
                 async.forEach(count, getListings, function(err) {
                     done();
                 });
