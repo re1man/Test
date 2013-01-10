@@ -247,7 +247,6 @@ function(app,Spinner, highlight) {
     template: 'app/templates/layouts/listing-post',
     serialize: function(){
       var mod = this.model.toJSON();
-      mod.title = $.trim(mod.title).substring(0, 30).trim(this) + "...";
       return mod;
     },
     afterRender: function(){
@@ -256,6 +255,18 @@ function(app,Spinner, highlight) {
       } else {
         this.$('.desktop').remove();
       }
+        Feed.rows = $('.search-list').children('li');
+        Feed.cache = Feed.rows.map(function(){
+          var text = '';
+          text = $(this).find('h5').text();
+          $('.tags-list>li').each(function(){
+            text = text + ' ' + $(this).text();
+          });
+          $('.styles-list>li').each(function(){
+            text = text + ' ' + $(this).text();
+          });
+          return text;
+        });
     }
   });
 
@@ -278,9 +289,11 @@ function(app,Spinner, highlight) {
       'keyup .search-box': 'search'
     },
     search: function(e){
-      var q = $(e.currentTarget).val().trim();
+      var q = $(e.currentTarget).val().trim().toLowerCase();
       if (this.searchShouts){
         this.filter(q);
+      } else {
+        this.listingFilter(q);
       }
     },
     initialize: function(){
@@ -360,6 +373,11 @@ function(app,Spinner, highlight) {
       if (!$(e.currentTarget).parent().hasClass('active')){
         $('.feed-tabs>li.active').find('i').removeClass('icon-white');
         $('.feed-list, .search-list').addClass('move-down');
+      }
+      if ($(e.currentTarget).attr('href') === '#search' && !this.searchShouts){
+        $('.search-list').show();
+      } else {
+        $('.search-list').hide();
       }
     },
     focusShout: function(e){
@@ -501,6 +519,26 @@ function(app,Spinner, highlight) {
         });
       },500);
     },
+    listingFilter: function(term){
+      var scores = [];
+      var self = this;
+      if ( !term ) {
+        Feed.rows.show();
+        Feed.rows.unhighlight();
+      } else {
+        Feed.rows.hide();
+        Feed.rows.unhighlight();
+        Feed.cache.each(function(i){
+          var score = this.score(term);
+          if (score > 0) { scores.push([score, i]); }
+        });
+
+        jQuery.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
+          $(Feed.rows[ this[1] ]).show();
+          $(Feed.rows[ this[1] ]).highlight(term);
+        });
+      }
+    },
     filter: function(term){
       var scores = [];
       var self = this;
@@ -533,6 +571,36 @@ function(app,Spinner, highlight) {
         this.rows.show();
         this.rows.unhighlight();
       }
+    },
+    updateUserCache: function(data){
+      var self = this;
+      $('.search-input').hide();
+      $('.loading-list').show();
+      $('a[href="#search"]').click();
+      var target = $('.feed-list')[0];
+      var spinner = new Spinner(window.spinnerOpts).spin(target);
+      if (data){
+        self.makeListingView(data);
+      } else {
+        $.get('/getListings', function(data){
+        $('.search-input').show();
+        $('.loading-list').remove();
+        $('.spinner').remove();
+        $('a[href="#shout"]').click();
+        self.makeListingView(data);
+      });
+      }
+      
+    },
+    makeListingView: function(data){
+      var self = this;
+      _.each(data, function(listing){
+        var model= new Feed.Model(listing);
+        var view = new Feed.Listing({model: model});
+        self.insertView('.search-list', view);
+        view.render();
+      });
+      $('.search-list').hide();
     },
     afterRender:function(){
         
@@ -586,12 +654,7 @@ function(app,Spinner, highlight) {
                       setTimeout(function(){
                         self.beat('/adminBeat');
                       },3000);
-                      _.each(data.listings, function(listing){
-                        var model= new Feed.Model(listing);
-                        var view = new Feed.Listing({model: model});
-                        self.insertView('.search-list', view);
-                        view.render();
-                      });
+                      self.updateUserCache(data.listings);
                     },
                     error: function(){
                       
@@ -604,6 +667,7 @@ function(app,Spinner, highlight) {
       } else {
         $('.etsy-login').remove();
         require( ['facebook-api!appId:' + this.facebook_id], function(FB) {
+          self.updateUserCache();
           $(".fb-login>img").click(function() {
              FB.login(function (response){
               if (response.status === 'connected') {
@@ -631,7 +695,7 @@ function(app,Spinner, highlight) {
                   $('.user-posting-section').find('.sticky').addClass('user-sticky');
                   $('.user-posting-section').show();
                   self.getMessages(data);
-                  self.updateCache();
+                  
                 });
             });
           }

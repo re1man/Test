@@ -115,6 +115,9 @@ ul.feed-tabs li a i {
 	-moz-box-shadow: 0 0px 5px rgba(34,25,25,0.4);
 	-webkit-box-shadow: 0 0px 5px rgba(34,25,25,0.4);
 }
+.listing-sticky{
+	height:100% !important;
+}
 .user-messaged{
 	height:100%;
 	outline: none;
@@ -338,4 +341,20 @@ hr{
 }
 .loading-list{
 	display: none;
+}
+.tags-list, .styles-list{
+	margin-top:5px;
+}
+.tags-list li, .styles-list li {
+	float:left;
+	margin:5px;
+	padding: 5px;
+	list-style-type: none;
+	font-size: 12px;
+}
+.tags-list li{
+	background: #F06D61;
+}
+.styles-list li {
+	background: #DA825F;
 }

@@ -234,6 +234,14 @@ app.get('/getShops', function(req,res){
 
 });
 
+app.get('/getListings', function(req,res){
+    listingDb.hmget(req.session.user.id, 'listings', function(err, listings){
+        if (listings[0]){
+            var _listings = JSON.parse(listings);
+            res.send(_listings);
+        }
+    });
+});
 
 app.post('/userShout', function(req, res){
     if (!req.session.user) res.send(404);
