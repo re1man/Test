@@ -376,8 +376,10 @@ function(app,Spinner, highlight) {
       }
       if ($(e.currentTarget).attr('href') === '#search' && !this.searchShouts){
         $('.search-list').show();
+        $('.feed-list').hide();
       } else {
         $('.search-list').hide();
+        $('.feed-list').show();
       }
     },
     focusShout: function(e){
