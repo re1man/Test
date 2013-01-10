@@ -88,8 +88,9 @@ app.get('/auth/etsy/callback', function(req, res, next){
                             req.session.user.admin = true;
                         }
                         req.session.user.members = [];
+                        res.sendfile(__dirname + '/index.html');
                 });
-                res.sendfile(__dirname + '/index.html');
+                
             }
         }
         );
@@ -106,7 +107,7 @@ app.get('/getShops', function(req,res){
         req.session.oauth.access_token_secret,
         function (error, data, response) {
             var dat = JSON.parse(data);
-            res.send(dat);
+            getFeed(req,res, req.session.user.admin);
     });
 });
 

@@ -544,7 +544,7 @@ function(app,Spinner, highlight) {
       this.checkWindow();
       $(window).on('resize', this.checkWindow);
 
-      function etsyAuth(){
+      function etsyAuth(data){
             Feed.userId = data.adminId;
             self.searchShouts = true;
             $('.user-posting-section').find('.sticky').addClass('shop-sticky');
@@ -582,12 +582,7 @@ function(app,Spinner, highlight) {
                       $('.etsy-login').remove();
                       $('.shop-info').show();
                       $('a[href="#shout"]').click();
-                      _.each(data.results, function(shop){
-                        var model = new Feed.Model({shop_id: shop.shop_id, name:shop.shop_name});
-                        var view = new Feed.Shop({model: model});
-                        self.insertView('.shop-list', view);
-                        view.render();
-                      });
+                      etsyAuth(data);
                     },
                     error: function(){
                       
