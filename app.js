@@ -71,7 +71,7 @@ app.get('/auth/etsy/callback', function(req, res, next){
                 req.session.oauth.access_token = oauth_access_token;
                 req.session.oauth.access_token_secret = oauth_access_token_secret;
                 etsyAuth.getProtectedResource(
-                    "http://openapi.etsy.com/v2/private/users/8405608", 
+                    "http://openapi.etsy.com/v2/private/users/__SELF__", 
                     "GET", 
                     req.session.oauth.access_token, 
                     req.session.oauth.access_token_secret,
@@ -100,120 +100,137 @@ app.get('/auth/etsy/callback', function(req, res, next){
 
 
 app.get('/getShops', function(req,res){
-    async.waterfall([
-    function(callback){
-        etsyAuth.getProtectedResource(
-        "http://openapi.etsy.com/v2/private/users/8405608/shops", 
-        "GET", 
-        req.session.oauth.access_token, 
-        req.session.oauth.access_token_secret,
-        function (error, data, response) {
-            var dat = JSON.parse(data);
-            callback(null, dat);
-            //getFeed(req,res, req.session.user.admin);
-        });
-    },
-    function(shops, callback){
-        var shopIds = [];
-        _.each(shops.results, function(shop){
-            shopIds.push(shop.shop_id);
-        });
-        callback(null, shopIds);
-    },
-    function(shopIds, callback){
-        var allListings = [];
-        var allListingsClean = [];
-        var index = 0;
-        var _key;
-        function getFirstListing(key, done) {
-            _key = key;
-            etsyAuth.getProtectedResource(
-            "http://openapi.etsy.com/v2/private/shops/"+key+"/listings/active?limit=50&offset=0", 
-            "GET", 
-            req.session.oauth.access_token, 
-            req.session.oauth.access_token_secret,
-            function (error, data, response) {
-                var e = 50;
-                var dat = JSON.parse(data);
-                var offset = dat.count;
-                var count = [];
-                for (var i = 0;e<offset;i++){
-                    count[i] = e;
-                    e = e + 50;
+    listingDb.hmget(req.session.user.id, 'listings', function(err, listings){
+        if (listings){
+            var result = {};
+            result.listings = JSON.parse(listings);
+            result.adminId = req.session.user.id;
+            res.send(result);
+        } else {
+            async.waterfall([
+                function(callback){
+                    etsyAuth.getProtectedResource(
+                    "http://openapi.etsy.com/v2/private/users/__SELF__/shops", 
+                    "GET", 
+                    req.session.oauth.access_token, 
+                    req.session.oauth.access_token_secret,
+                    function (error, data, response) {
+                        var dat = JSON.parse(data);
+                        callback(null, dat);
+                    });
+                },
+                function(shops, callback){
+                    var shopIds = [];
+                    _.each(shops.results, function(shop){
+                        shopIds.push(shop.shop_id);
+                    });
+                    callback(null, shopIds);
+                },
+                function(shopIds, callback){
+                    var allListings = [];
+                    var allListingsClean = [];
+                    var index = 0;
+                    var _key;
+                    function getFirstListing(key, done) {
+                        _key = key;
+                        etsyAuth.getProtectedResource(
+                        "http://openapi.etsy.com/v2/private/shops/"+key+"/listings/active?limit=50&offset=0", 
+                        "GET", 
+                        req.session.oauth.access_token, 
+                        req.session.oauth.access_token_secret,
+                        function (error, data, response) {
+                            var e = 50;
+                            var dat = JSON.parse(data);
+                            var offset = dat.count;
+                            var count = [];
+                            for (var i = 0;e<offset;i++){
+                                count[i] = e;
+                                e = e + 50;
+                            }
+                            _.each(dat.results, function(result){
+                                allListings.push(result);
+                            });
+                            async.forEach(count, getListings, function(err) {
+                                done();
+                            });
+                            
+                        });
+                    }
+
+                    function getListings(offset, done) {
+                        etsyAuth.getProtectedResource(
+                        "http://openapi.etsy.com/v2/private/shops/"+_key+"/listings/active?limit=50&offset="+offset, 
+                        "GET", 
+                        req.session.oauth.access_token, 
+                        req.session.oauth.access_token_secret,
+                        function (error, data, response) {
+                            var dat = JSON.parse(data);
+                            _.each(dat.results, function(result){
+                                allListings.push(result);
+                            });
+                            done();
+                            
+                        });
+                    }
+                    
+
+                    async.forEach(shopIds, getFirstListing, function(err) {
+                        _.each(allListings, function(listing){
+                            var item = {};
+                            item.listing_id = listing.listing_id;
+                            item.title = listing.title;
+                            item.description = listing.description;
+                            item.style = listing.style;
+                            item.tags = listing.tags;
+                            item.url = listing.url;
+                            allListingsClean.push(item);
+                        });
+                        callback(null, allListingsClean);
+                    });
+                },
+                function(allListingsClean, callback){
+                    allListingsFinal = [];
+                    function getListingsImage(listing, done) {
+                        etsyAuth.getProtectedResource(
+                        "http://openapi.etsy.com/v2/private/listings/"+listing.listing_id+"/images", 
+                        "GET", 
+                        req.session.oauth.access_token, 
+                        req.session.oauth.access_token_secret,
+                        function (error, data, response) {
+                            var dat = JSON.parse(data);
+                            listing.image = dat.results[0].url_170x135;
+                            allListingsFinal.push(listing);
+                            done();
+                            
+                        });
+                    }
+
+                    async.forEach(allListingsClean, getListingsImage, function(err) {
+                        callback(null, allListingsFinal);
+                    });
+                },
+                function(allListingsFinal, callback){
+                    var _allListingsFinal = JSON.stringify(allListingsFinal);
+                    listingDb.hmset(req.session.user.id, 'listings', _allListingsFinal);
+                    var result = {};
+                    result.adminId = req.session.user.id;
+                    result.listings = allListingsFinal;
+                    callback(null, result);
                 }
-                _.each(dat.results, function(result){
-                    allListings.push(result);
-                });
-                async.forEach(count, getListings, function(err) {
-                    done();
-                });
-                
-            });
-        }
-
-        function getListings(offset, done) {
-            etsyAuth.getProtectedResource(
-            "http://openapi.etsy.com/v2/private/shops/"+_key+"/listings/active?limit=50&offset="+offset, 
-            "GET", 
-            req.session.oauth.access_token, 
-            req.session.oauth.access_token_secret,
-            function (error, data, response) {
-                var dat = JSON.parse(data);
-                _.each(dat.results, function(result){
-                    allListings.push(result);
-                });
-                done();
-                
-            });
-        }
-        
-
-        async.forEach(shopIds, getFirstListing, function(err) {
-            _.each(allListings, function(listing){
-                var item = {};
-                item.listing_id = listing.listing_id;
-                item.title = listing.title;
-                item.description = listing.description;
-                item.style = listing.style;
-                item.tags = listing.tags;
-                item.url = listing.url;
-                allListingsClean.push(item);
-            });
-            callback(null, allListingsClean);
-        });
-    },
-    function(allListingsClean, callback){
-        allListingsFinal = [];
-        function getListingsImage(listing, done) {
-            etsyAuth.getProtectedResource(
-            "http://openapi.etsy.com/v2/private/listings/"+listing.listing_id+"/images", 
-            "GET", 
-            req.session.oauth.access_token, 
-            req.session.oauth.access_token_secret,
-            function (error, data, response) {
-                var dat = JSON.parse(data);
-                listing.image = dat.results[0].url_170x135;
-                allListingsFinal.push(listing);
-                done();
-                
-            });
-        }
-
-        async.forEach(allListingsClean, getListingsImage, function(err) {
-            callback(null, allListingsFinal);
-        });
-    }
-], function (err, result) {
-    if (result === 200){
-        res.send(200);
-    }
-    if (!err){
-        res.send(result);
-    } else {
-        res.send(new Error('There was an error. Please try Again'));
-    }
+            ], function (err, result) {
+                if (result === 200){
+                    res.send(200);
+                }
+                if (!err){
+                    res.send(result);
+                } else {
+                    res.send(new Error('There was an error. Please try Again'));
+                }
     
-});
+            });
+        }
+    });
+
 });
 
 

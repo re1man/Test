@@ -544,20 +544,8 @@ function(app,Spinner, highlight) {
       this.checkWindow();
       $(window).on('resize', this.checkWindow);
 
-      function etsyAuth(data){
-            Feed.userId = data.adminId;
-            self.searchShouts = true;
-            $('.user-posting-section').find('.sticky').addClass('shop-sticky');
-            $('.user-posting-section').show();
-            self.getMessages(data);
-            self.updateCache();
-      }
-
       if (this.options.admin || this.options.showShops){
         $('.fb-login').remove();
-        setTimeout(function(){
-          self.beat('/adminBeat');
-        },3000);
 
             if (this.options.admin){
               $('.etsy-auth').click(function(){
@@ -584,13 +572,19 @@ function(app,Spinner, highlight) {
                     url: '/getShops',
                     success: function(data){
                       console.log(data);
+                      Feed.userId = data.adminId;
                       $('.etsy-login').remove();
                       $('.shop-info').show();
                       $('a[href="#shout"]').click();
                       $('.search-input').show();
                       $('.loading-list').remove();
                       $('.spinner').remove();
-                      etsyAuth(data);
+                      $('.user-posting-section').find('.sticky').addClass('shop-sticky');
+                      $('.user-posting-section').show();
+                      self.searchShouts = true;
+                      setTimeout(function(){
+                        self.beat('/adminBeat');
+                      },3000);
                     },
                     error: function(){
                       
