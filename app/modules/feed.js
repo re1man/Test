@@ -579,6 +579,7 @@ function(app,Spinner, highlight) {
                     type: "GET",
                     url: '/getShops',
                     success: function(data){
+                      console.log(data);
                       $('.etsy-login').remove();
                       $('.shop-info').show();
                       $('a[href="#shout"]').click();
