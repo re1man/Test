@@ -100,8 +100,8 @@ app.get('/auth/etsy/callback', function(req, res, next){
 
 
 app.get('/getShops', function(req,res){
-    listingDb.hmget(req.session.user.id, 'listings', function(err, listings){
-        if (listings[0]){
+    listingDb.get('listings', function(err, listings){
+        if (listings){
             var result = {};
             result.listings = JSON.parse(listings);
             result.adminId = req.session.user.id;
@@ -212,7 +212,7 @@ app.get('/getShops', function(req,res){
                 },
                 function(allListingsFinal, callback){
                     var _allListingsFinal = JSON.stringify(allListingsFinal);
-                    listingDb.hmset(req.session.user.id, 'listings', _allListingsFinal);
+                    listingDb.set('listings', _allListingsFinal);
                     var result = {};
                     result.adminId = req.session.user.id;
                     result.listings = allListingsFinal;
@@ -235,8 +235,8 @@ app.get('/getShops', function(req,res){
 });
 
 app.get('/getListings', function(req,res){
-    listingDb.hmget(req.session.user.id, 'listings', function(err, listings){
-        if (listings[0]){
+    listingDb.get('listings', function(err, listings){
+        if (listings){
             var _listings = JSON.parse(listings);
             res.send(_listings);
         }

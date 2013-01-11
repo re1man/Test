@@ -114,6 +114,8 @@ function(app,Spinner, highlight) {
       }
     },
     afterRender: function(){
+      var userId = this.model.get('userId');
+      var index = this.options.index;
       if (!Modernizr.touch) {
         this.$('.mobile').remove();
       } else {
@@ -131,6 +133,20 @@ function(app,Spinner, highlight) {
         this.makeEditable();
       } else if ((Feed.userId && this.options.otherUser === Feed.userId)){
         this.makeEditable();
+
+        if (($(this.el).hasClass('my-comment-sticky') ||
+          $(this.el).hasClass('comment-shop-sticky')) &&
+          !Feed[userId][index].listing){
+          var model = new Feed.Model({});
+          Feed[userId][index].listing = new Feed.Listing({model:model,notAdded:true,
+          append: function(root, child) {
+              $($(root).find('li').eq(1)).before(child);
+          }
+          });
+          Feed[userId][index].insertView(Feed[userId][index].listing);
+          Feed[userId][index].listing.render();
+        }
+
       } else {
         if (!Modernizr.touch) $(this.el).find('.post-comment').tooltip({placement: 'right'});
       }
@@ -243,18 +259,22 @@ function(app,Spinner, highlight) {
 
   Feed.Listing = Backbone.View.extend({
     tagName: 'li',
-    className: 'listing-sticky sticky listing-item',
+    className: 'listing-sticky sticky',
     template: 'app/templates/layouts/listing-post',
     serialize: function(){
       var mod = this.model.toJSON();
+      if (this.options.notAdded) mod.notAdded = true;
       return mod;
     },
     afterRender: function(){
+      if (!Modernizr.touch) $(this.el).find('.add-listing').tooltip({placement: 'right'});
       if (!Modernizr.touch) {
         this.$('.mobile').remove();
       } else {
         this.$('.desktop').remove();
       }
+      if (this.options.cache){
+        $(this.el).addClass('listing-item');
         Feed.rows = $('.search-list').children('li');
         Feed.cache = Feed.rows.map(function(){
           var text = '';
@@ -267,6 +287,7 @@ function(app,Spinner, highlight) {
           });
           return text;
         });
+      }
     }
   });
 
@@ -277,8 +298,8 @@ function(app,Spinner, highlight) {
       'mouseenter .feed-tabs>li>a, .feed-filters>li': 'iconWhite',
       'mouseleave .feed-tabs>li>a, .feed-filters>li': 'iconBlack',
       'click .feed-tabs>li>a': 'resetIcon',
-      'mouseenter .post-shout, .post-comment': 'iconWhitePostShout',
-      'mouseleave .post-shout, .post-comment': 'iconBlackPostShout',
+      'mouseenter .post-shout, .post-comment, .add-listing': 'iconWhitePostShout',
+      'mouseleave .post-shout, .post-comment, .add-listing': 'iconBlackPostShout',
       'click .user-posting-section>.sticky>.post-shout': 'postShout',
       'click .close-box': 'closeBox',
       'focus .user-shout': 'focusShout',
@@ -576,29 +597,28 @@ function(app,Spinner, highlight) {
     },
     updateUserCache: function(data){
       var self = this;
-      $('.search-input').hide();
-      $('.loading-list').show();
-      $('a[href="#search"]').click();
-      var target = $('.feed-list')[0];
-      var spinner = new Spinner(window.spinnerOpts).spin(target);
       if (data){
-        self.makeListingView(data);
+        self.makeListingView(data,true);
       } else {
+        $('.search-input').hide();
+        $('.loading-list').show();
+        $('a[href="#search"]').click();
         $.get('/getListings', function(data){
         $('.search-input').show();
         $('.loading-list').remove();
-        $('.spinner').remove();
         $('a[href="#shout"]').click();
-        self.makeListingView(data);
+        self.makeListingView(data,true);
       });
       }
       
     },
-    makeListingView: function(data){
+    makeListingView: function(data,cache){
       var self = this;
+      Feed.listings = {};
       _.each(data, function(listing){
         var model= new Feed.Model(listing);
-        var view = new Feed.Listing({model: model});
+        Feed.listings[listing.listing_id] = model;
+        var view = new Feed.Listing({model: model, cache:cache});
         self.insertView('.search-list', view);
         view.render();
       });
@@ -620,6 +640,7 @@ function(app,Spinner, highlight) {
         $('.fb-login').remove();
 
             if (this.options.admin){
+              $('a[href="#shout"]').click();
               $('.etsy-auth').click(function(){
                 
                   $.ajax({
@@ -637,8 +658,6 @@ function(app,Spinner, highlight) {
               $('.search-input').hide();
               $('.loading-list').show();
               $('a[href="#search"]').click();
-              var target = $('.feed-list')[0];
-              var spinner = new Spinner(window.spinnerOpts).spin(target);
                   $.ajax({
                     type: "GET",
                     url: '/getShops',
@@ -649,7 +668,6 @@ function(app,Spinner, highlight) {
                       $('a[href="#shout"]').click();
                       $('.search-input').show();
                       $('.loading-list').remove();
-                      $('.spinner').remove();
                       $('.user-posting-section').find('.sticky').addClass('shop-sticky');
                       $('.user-posting-section').show();
                       self.searchShouts = true;

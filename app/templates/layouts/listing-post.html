@@ -1,4 +1,9 @@
-<a class="listing-image" href="{{url}}" data-bypass="true" target="_blank" style="background-image: url({{image}})"></a>
+{{#if notAdded}}
+<div class="listing-add">
+	<i class="icon icon-tag desktop add-listing" rel="tooltip" title="Add Listing"></i>
+</div>
+{{else}}
+<a class="listing-image" href="{{url}}" listing-id="{{listing_id}}" data-bypass="true" target="_blank" style="background-image: url({{image}})"></a>
 <hr />
 <h5>{{title}}</h5>
 <div class="listing-price-container">${{price}}</div>
@@ -17,4 +22,5 @@
 <li>{{this}}</li>
 {{/each}}
 </ul>
+{{/if}}
 {{/if}}
