@@ -1,8 +1,27 @@
 {{#if notAdded}}
 <div class="listing-add">
-	<i class="icon icon-tag desktop add-listing" rel="tooltip" title="Add Listing"></i>
+	<!-- no-touch -->
+	<i class="icon-tag desktop add-listing" rel="tooltip" title="Add Listing"></i>
+	<!-- touch -->
+	<div class ="add-listing mobile"><i class="icon-tag"></i></div>
 </div>
 {{else}}
+{{#if cache}}
+<div class="listing-add">
+	<!-- no-touch -->
+	<i class="icon-plus desktop add-listing-to" rel="tooltip" title="Add Listing" listing-id="{{listing_id}}"></i>
+	<!-- touch -->
+	<div class ="add-listing-to mobile" listing-id="{{listing_id}}"><i class="icon-plus"></i></div>
+</div>
+{{/if}}
+{{#if mine}}
+<div class="listing-add">
+	<!-- no-touch -->
+	<i class="icon-tag desktop add-listing" rel="tooltip" title="Change"></i>
+	<!-- touch -->
+	<div class ="add-listing mobile"><i class="icon-tag"></i></div>
+</div>
+{{/if}}
 <a class="listing-image" href="{{url}}" listing-id="{{listing_id}}" data-bypass="true" target="_blank" style="background-image: url({{image}})"></a>
 <hr />
 <h5>{{title}}</h5>

@@ -255,7 +255,10 @@ app.post('/userShout', function(req, res){
         setUserMessage(req.session.user.id, req.body.msg,req, res, req.body.index);
     }
 });
-
+app.post('/addListing', function(req, res){
+    if (!req.session.user) res.send(404);
+    addListing(req.body.userId, req.body.index, req.session.user.id, req.body.listingId, req, res);
+});
 app.get('/beat', function(req, res){
     getFeed(req,res);
 });
@@ -354,6 +357,34 @@ function getFeed(req,res, admin){
     
 });
 }
+
+function addListing(userId, index, otherUser, listingId, req, res){
+    async.waterfall([
+        function(callback){
+            userDb.hmget(userId, 'messages', function(err, msgs){
+                messages = msgs;
+                callback(null, messages, index, otherUser, listingId, req);
+            });
+        },
+        function(messages, index,otherUser,listingId, req, callback){
+            msgs = JSON.parse(messages);
+            if (req.session.user && req.session.user.id !== msgs[index].otherUser.id) {
+                callback(null, 404);
+            }
+            msgs[index].listingId = listingId;
+            var _msgs = JSON.stringify(msgs);
+            userDb.hmset(userId, 'messages', _msgs);
+            callback(null, msgs);
+        }
+    ],  function (err, result) {
+        if (!err){
+            res.send({msgs: result});
+        } else {
+            res.send(new Error('There was an error. Please try Again'));
+        }
+    });
+}
+
 function setUserMessage(userId, mess, req, res,index, otherUser){
     async.waterfall([
     function(callback){

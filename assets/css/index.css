@@ -159,12 +159,18 @@ ul.feed-tabs li a i {
 	height:30px;
 	width:30px;
 }
+.mobile.add-listing, .mobile.add-listing-to{
+	height:30px;
+}
 .mobile.post-shout i, .mobile.post-comment i {
 	position: relative;
 	top: 10px;
 	left: 10px;
 }
-
+.mobile.add-listing i, .mobile.add-listing-to i{
+	position: relative;
+	top: 8px;
+}
 .post-shout, .post-comment{
 	position:absolute;
 	cursor: pointer;
@@ -197,10 +203,7 @@ ul.feed-tabs li a i {
 	top: 30px;
 	left: 0%;
 }
-.adjust-price{
-	cursor: pointer;
-	margin-left:3px;
-}
+
 .search-shout{
 	position: fixed;
 	width: 90%;
@@ -208,24 +211,18 @@ ul.feed-tabs li a i {
 	margin-top: -40px;
 	z-index: 1;
 }
-.search-slider-price{
-	width:90%;
-	margin:auto;
-	margin-top: 20px;
-	display:none;
-}
-.price-range-cont{
-	font-size: 18px;
-}
-.price-amount{
-	color: #8CBF99;
-	font-weight:bold;
-}
+
+
 .show{
 	display: block;
 }
 .center{
 	text-align: center;
+}
+.centered-wide{
+	width: 100%;
+	display: table;
+	margin: auto;
 }
 .fb-login, .etsy-login{
 	text-align: center;
@@ -360,4 +357,10 @@ hr{
 }
 .listing-add {
 	text-align: center;
+}
+.adding-listing .add-listing-to{
+	display:inline-block;
+}
+.add-listing-to {
+	display: none;
 }

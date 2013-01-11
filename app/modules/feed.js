@@ -13,6 +13,7 @@ function(app,Spinner, highlight) {
   // Create a new module.
   var Feed = app.module();
   Feed.Intervals = {};
+  Feed.AddTo = {};
   // Default model.
   Feed.Model = Backbone.Model.extend();
 
@@ -38,6 +39,16 @@ function(app,Spinner, highlight) {
         var model = this.commentModel(this.options.comment.msg, this.options.comment.adminName);
         Feed[userId][index].comment = new Feed.User({model: model, index: index,otherUser: this.options.comment.id});
         this.insertView(Feed[userId][index].comment);
+      }
+      if (this.options.listingId){
+        var mod = Feed.listings[this.options.listingId];
+        Feed[userId][index].listing = new Feed.Listing({model:mod,owner:this.options.comment.id,
+        append: function(root, child) {
+            $($(root).find('li').eq(1)).before(child);
+        }
+        });
+        Feed[userId][index].insertView(Feed[userId][index].listing);
+        Feed[userId][index].listing.render();
       }
     },
     commentModel: function(msg,adminName){
@@ -139,13 +150,13 @@ function(app,Spinner, highlight) {
           $(this.el).hasClass('comment-shop-sticky')) &&
           !Feed[userId][index].listing){
           var model = new Feed.Model({});
-          Feed[userId][index].listing = new Feed.Listing({model:model,notAdded:true,
+          var listing = new Feed.Listing({model:model,notAdded:true,
           append: function(root, child) {
               $($(root).find('li').eq(1)).before(child);
           }
           });
-          Feed[userId][index].insertView(Feed[userId][index].listing);
-          Feed[userId][index].listing.render();
+          Feed[userId][index].insertView(listing);
+          listing.render();
         }
 
       } else {
@@ -265,10 +276,12 @@ function(app,Spinner, highlight) {
     serialize: function(){
       var mod = this.model.toJSON();
       if (this.options.notAdded) mod.notAdded = true;
+      if (this.options.cache) mod.cache = true;
+      if (this.options.owner === Feed.userId) mod.mine = true;
       return mod;
     },
     afterRender: function(){
-      if (!Modernizr.touch) $(this.el).find('.add-listing').tooltip({placement: 'right'});
+      if (!Modernizr.touch) $(this.el).find('.add-listing, .add-listing-to').tooltip({placement: 'right'});
       if (!Modernizr.touch) {
         this.$('.mobile').remove();
       } else {
@@ -299,9 +312,11 @@ function(app,Spinner, highlight) {
       'mouseenter .feed-tabs>li>a, .feed-filters>li': 'iconWhite',
       'mouseleave .feed-tabs>li>a, .feed-filters>li': 'iconBlack',
       'click .feed-tabs>li>a': 'resetIcon',
-      'mouseenter .post-shout, .post-comment, .add-listing': 'iconWhitePostShout',
-      'mouseleave .post-shout, .post-comment, .add-listing': 'iconBlackPostShout',
+      'mouseenter .post-shout, .post-comment, .add-listing, .add-listing-to': 'iconWhitePostShout',
+      'mouseleave .post-shout, .post-comment, .add-listing, .add-listing-to': 'iconBlackPostShout',
       'click .user-posting-section>.sticky>.post-shout': 'postShout',
+      'click .add-listing': 'searchListings',
+      'click .add-listing-to': 'addListingTo',
       'click .close-box': 'closeBox',
       'focus .user-shout': 'focusShout',
       'blur .user-shout': 'blurShout',
@@ -317,6 +332,27 @@ function(app,Spinner, highlight) {
       } else {
         this.listingFilter(q);
       }
+    },
+    searchListings: function(e){
+      var userId = $(e.currentTarget).parents('.list-box').attr('user-id');
+      var index = $(e.currentTarget).parents('.list-box').attr('message-index');
+      if (this.searchShouts) this.searchShouts = false;
+      Feed.AddTo.userId = userId;
+      Feed.AddTo.index = index;
+      if (!Modernizr.touch) $('a[href="#search"]').click();
+      if (Modernizr.touch) $('a[href="#search"]').trigger('touchstart');
+      $('.search-list').addClass('adding-listing');
+    },
+    addListingTo: function(e){
+      var listing_id = $(e.currentTarget).attr('listing-id');
+      var target = $(e.currentTarget).parent()[0];
+      var spinner = new Spinner(window.spinnerOpts).spin(target);
+      $('.add-listing-to').hide();
+      $.post('/addListing', {userId: Feed.AddTo.userId, index:Feed.AddTo.index, listingId: listing_id}, function(){
+        $('.spinner').remove();
+        if (!Modernizr.touch) $('a[href="#shout"]').click();
+        if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
+      });
     },
     initialize: function(){
       this.shoutPlaceholder = "Post something!";
@@ -402,6 +438,10 @@ function(app,Spinner, highlight) {
       } else {
         $('.search-list').hide();
         $('.feed-list').show();
+        this.searchShouts = true;
+        Feed.AddTo.userId = null;
+        Feed.AddTo.index = null;
+        $('.search-list').removeClass('adding-listing');
       }
     },
     focusShout: function(e){
@@ -421,9 +461,11 @@ function(app,Spinner, highlight) {
       if ($(window).width() < 768){
         $('.feed-tab-li>a>span').hide();
         $('.feed-tab-li').addClass('center');
+        $('ul.feed-tabs').addClass('centered-wide');
       } else {
         $('.feed-tab-li>a>span').show();
         $('.feed-tab-li').removeClass('center');
+        $('ul.feed-tabs').removeClass('centered-wide');
       }
       
     },
@@ -486,6 +528,7 @@ function(app,Spinner, highlight) {
       
     },
     makeUserView: function(userId, msg, index, prepend){
+      console.log(Feed.listings[msg.listingId]);
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         if (msg.msg !== Feed[userId][index].user.model.get('msg')){
           Feed[userId][index].user.model.set('msg', msg.msg);
@@ -505,6 +548,21 @@ function(app,Spinner, highlight) {
             Feed[userId][index].comment.model.set('msg', msg.otherUser.msg);
           }
         }
+        if (msg.listingId){
+          if (!Feed[userId][index].listing){
+            var mod = Feed.listings[msg.listingId];
+            Feed[userId][index].listing = new Feed.Listing({model:mod,owner:msg.otherUser.id,
+            append: function(root, child) {
+                $($(root).find('li').eq(1)).before(child);
+            }
+            });
+            Feed[userId][index].insertView(Feed[userId][index].listing);
+            Feed[userId][index].listing.render();
+          } else if (msg.listingId !== Feed[userId][index].listing.model.get('listing_id')){
+            Feed[userId][index].listing.model = Feed.listings[msg.listingId];
+            Feed[userId][index].listing.render();
+          }
+        }
       } else {
 
         if (!msg.msg) return false;
@@ -513,6 +571,7 @@ function(app,Spinner, highlight) {
           Feed[userId][index] = new Feed.ListBox({
             userMessage: new Feed.Model({msg: msg.msg, name: msg.adminName, userId: userId, index:index}),
             comment: msg.otherUser,
+            listingId: msg.listingId,
             append: function(root, child) {
               $(root).prepend(child);
             }
@@ -520,7 +579,8 @@ function(app,Spinner, highlight) {
         } else {
           Feed[userId][index] = new Feed.ListBox({
             userMessage: new Feed.Model({msg: msg.msg, name: msg.adminName, userId: userId, index:index}),
-            comment: msg.otherUser
+            comment: msg.otherUser,
+            listingId: msg.listingId
           });
           
         }
