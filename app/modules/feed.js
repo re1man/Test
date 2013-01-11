@@ -54,7 +54,8 @@ function(app,Spinner, highlight) {
         return false;
       }
       if (!Feed.userId){
-         $('a[href="#shout"]').click();
+         if (!Modernizr.touch) $('a[href="#shout"]').click();
+        if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
          return false;
       }
         var model = this.commentModel("Post Comment");
@@ -602,11 +603,13 @@ function(app,Spinner, highlight) {
       } else {
         $('.search-input').hide();
         $('.loading-list').show();
-        $('a[href="#search"]').click();
+        if (!Modernizr.touch) $('a[href="#search"]').click();
+        if (Modernizr.touch) $('a[href="#search"]').trigger('touchstart');
         $.get('/getListings', function(data){
         $('.search-input').show();
         $('.loading-list').remove();
-        $('a[href="#shout"]').click();
+        if (!Modernizr.touch) $('a[href="#shout"]').click();
+        if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
         self.makeListingView(data,true);
       });
       }
@@ -640,7 +643,8 @@ function(app,Spinner, highlight) {
         $('.fb-login').remove();
 
             if (this.options.admin){
-              $('a[href="#shout"]').click();
+              if (!Modernizr.touch) $('a[href="#shout"]').click();
+              if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
               $('.etsy-auth').click(function(){
                 
                   $.ajax({
@@ -657,7 +661,8 @@ function(app,Spinner, highlight) {
             } else if (this.options.showShops) {
               $('.search-input').hide();
               $('.loading-list').show();
-              $('a[href="#search"]').click();
+              if (!Modernizr.touch) $('a[href="#search"]').click();
+              if (Modernizr.touch) $('a[href="#search"]').trigger('touchstart');
                   $.ajax({
                     type: "GET",
                     url: '/getShops',
@@ -665,7 +670,8 @@ function(app,Spinner, highlight) {
                       Feed.userId = data.adminId;
                       $('.etsy-login').remove();
                       $('.shop-info').show();
-                      $('a[href="#shout"]').click();
+                      if (!Modernizr.touch) $('a[href="#shout"]').click();
+                      if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
                       $('.search-input').show();
                       $('.loading-list').remove();
                       $('.user-posting-section').find('.sticky').addClass('shop-sticky');
