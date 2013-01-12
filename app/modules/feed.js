@@ -28,6 +28,7 @@ function(app,Spinner, highlight) {
       'click .post-comment': 'postComment'
     },
     beforeRender: function(){
+      var self = this;
       this.int = this.options.userMessage.get('userId');
       var userId = this.options.userMessage.get('userId');
       var index = this.options.userMessage.get('index');
@@ -42,13 +43,22 @@ function(app,Spinner, highlight) {
       }
       if (this.options.listingId){
         var mod = Feed.listings[this.options.listingId];
-        Feed[userId][index].listing = new Feed.Listing({model:mod,owner:this.options.comment.id,
+        var owner;
+        if (this.options.noChangeListing) {
+          owner = null;
+        } else {
+          owner = this.options.comment.id;
+        }
+        Feed[userId][index].listing = new Feed.Listing({model:mod,owner:owner,
         append: function(root, child) {
-            $($(root).find('li').eq(1)).before(child);
+            if (self.options.noChangeListing) {
+              $(root).append(child);
+            } else {
+              $($(root).find('li').eq(1)).before(child);
+            }
         }
         });
         Feed[userId][index].insertView(Feed[userId][index].listing);
-        Feed[userId][index].listing.render();
       }
     },
     commentModel: function(msg,adminName){
@@ -66,7 +76,7 @@ function(app,Spinner, highlight) {
       }
       if (!Feed.userId){
          if (!Modernizr.touch) $('a[href="#shout"]').click();
-        if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
+        if (Modernizr.touch) $('a[href="#shout"]').trigger('click');
          return false;
       }
         var model = this.commentModel("Post Comment");
@@ -152,7 +162,7 @@ function(app,Spinner, highlight) {
           var model = new Feed.Model({});
           var listing = new Feed.Listing({model:model,notAdded:true,
           append: function(root, child) {
-              $($(root).find('li').eq(1)).before(child);
+            $($(root).find('li').eq(1)).before(child);
           }
           });
           Feed[userId][index].insertView(listing);
@@ -277,11 +287,11 @@ function(app,Spinner, highlight) {
       var mod = this.model.toJSON();
       if (this.options.notAdded) mod.notAdded = true;
       if (this.options.cache) mod.cache = true;
-      if (this.options.owner === Feed.userId) mod.mine = true;
+      if (Feed.userId && this.options.owner === Feed.userId) mod.mine = true;
       return mod;
     },
     afterRender: function(){
-      if (!Modernizr.touch) $(this.el).find('.add-listing, .add-listing-to').tooltip({placement: 'right'});
+      if (!Modernizr.touch) $(this.el).find('.add-listing, .add-listing-to, .comment-listing-to').tooltip({placement: 'right'});
       if (!Modernizr.touch) {
         this.$('.mobile').remove();
       } else {
@@ -312,11 +322,12 @@ function(app,Spinner, highlight) {
       'mouseenter .feed-tabs>li>a, .feed-filters>li': 'iconWhite',
       'mouseleave .feed-tabs>li>a, .feed-filters>li': 'iconBlack',
       'click .feed-tabs>li>a': 'resetIcon',
-      'mouseenter .post-shout, .post-comment, .add-listing, .add-listing-to': 'iconWhitePostShout',
-      'mouseleave .post-shout, .post-comment, .add-listing, .add-listing-to': 'iconBlackPostShout',
+      'mouseenter .post-shout, .post-comment, .add-listing, .add-listing-to, .comment-listing-to': 'iconWhitePostShout',
+      'mouseleave .post-shout, .post-comment, .add-listing, .add-listing-to, .comment-listing-to': 'iconBlackPostShout',
       'click .user-posting-section>.sticky>.post-shout': 'postShout',
       'click .add-listing': 'searchListings',
       'click .add-listing-to': 'addListingTo',
+      'click .comment-listing-to': 'commentListingTo',
       'click .close-box': 'closeBox',
       'focus .user-shout': 'focusShout',
       'blur .user-shout': 'blurShout',
@@ -340,18 +351,27 @@ function(app,Spinner, highlight) {
       Feed.AddTo.userId = userId;
       Feed.AddTo.index = index;
       if (!Modernizr.touch) $('a[href="#search"]').click();
-      if (Modernizr.touch) $('a[href="#search"]').trigger('touchstart');
+      if (Modernizr.touch) $('a[href="#search"]').trigger('click');
       $('.search-list').addClass('adding-listing');
     },
     addListingTo: function(e){
+      this.addListingPost(e, '/addListing',$('.add-listing-to'), Feed.AddTo.userId, Feed.AddTo.index);
+    },
+    commentListingTo: function(e){
+      this.addListingPost(e, '/listingComment',$('.comment-listing-to'), '', '');
+    },
+    addListingPost: function(e,url,obj, userId, index){
+      var self = this;
       var listing_id = $(e.currentTarget).attr('listing-id');
       var target = $(e.currentTarget).parent()[0];
       var spinner = new Spinner(window.spinnerOpts).spin(target);
-      $('.add-listing-to').hide();
-      $.post('/addListing', {userId: Feed.AddTo.userId, index:Feed.AddTo.index, listingId: listing_id}, function(){
+      obj.hide();
+      $.post(url, {userId: userId, index:index, listingId: listing_id}, function(){
         $('.spinner').remove();
+        self.searchShouts = true;
+        obj.show();
         if (!Modernizr.touch) $('a[href="#shout"]').click();
-        if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
+        if (Modernizr.touch) $('a[href="#shout"]').trigger('click');
       });
     },
     initialize: function(){
@@ -438,7 +458,6 @@ function(app,Spinner, highlight) {
       } else {
         $('.search-list').hide();
         $('.feed-list').show();
-        this.searchShouts = true;
         Feed.AddTo.userId = null;
         Feed.AddTo.index = null;
         $('.search-list').removeClass('adding-listing');
@@ -469,40 +488,6 @@ function(app,Spinner, highlight) {
       }
       
     },
-    getMessages: function(data){
-      var otherMessages = _.shuffle(data.messages);
-      var yourMessages;
-      if (data.yourMessages){
-        yourMessages = data.yourMessages.reverse();
-      } else {
-        yourMessages = [];
-      }
-      var total = 0;
-      _.each(data.messages, function(message){
-        for (var property in message) {
-          total = total + message[property].length;
-        }
-      });
-      total = total + yourMessages.length;
-      if (total === 0) return false;
-      for (var i = 0; i < total; i++){
-        //mine
-        if (yourMessages[i]) {
-          this.makeUserView(Feed.userId,yourMessages[i], i);
-        }
-
-        
-        //yours
-        if (otherMessages[i]){
-          for (var property in otherMessages[i]) {
-          if (data.messages.length === 0) continue;
-            this.makeUserView(property, otherMessages[i][property][i], i);
-          }
-        }
-        
-      }
-      
-    },
     _makeUserView: function(message, property){
       var self = this;
       _.each(message[property], function(msg, i){
@@ -528,7 +513,6 @@ function(app,Spinner, highlight) {
       
     },
     makeUserView: function(userId, msg, index, prepend){
-      console.log(Feed.listings[msg.listingId]);
       if ($('.list-box[user-id='+userId+']'+'[message-index='+index+']').length > 0){
         if (msg.msg !== Feed[userId][index].user.model.get('msg')){
           Feed[userId][index].user.model.set('msg', msg.msg);
@@ -551,9 +535,19 @@ function(app,Spinner, highlight) {
         if (msg.listingId){
           if (!Feed[userId][index].listing){
             var mod = Feed.listings[msg.listingId];
-            Feed[userId][index].listing = new Feed.Listing({model:mod,owner:msg.otherUser.id,
+            var owner;
+            if (msg.noChangeListing) {
+              owner = null;
+            } else {
+              owner = msg.otherUser.id;
+            }
+            Feed[userId][index].listing = new Feed.Listing({model:mod,owner:owner,
             append: function(root, child) {
-                $($(root).find('li').eq(1)).before(child);
+                if (msg.noChangeListing) {
+                  $(root).append(child);
+                } else {
+                  $($(root).find('li').eq(1)).before(child);
+                }
             }
             });
             Feed[userId][index].insertView(Feed[userId][index].listing);
@@ -572,6 +566,7 @@ function(app,Spinner, highlight) {
             userMessage: new Feed.Model({msg: msg.msg, name: msg.adminName, userId: userId, index:index}),
             comment: msg.otherUser,
             listingId: msg.listingId,
+            noChangeListing: msg.noChangeListing,
             append: function(root, child) {
               $(root).prepend(child);
             }
@@ -580,7 +575,8 @@ function(app,Spinner, highlight) {
           Feed[userId][index] = new Feed.ListBox({
             userMessage: new Feed.Model({msg: msg.msg, name: msg.adminName, userId: userId, index:index}),
             comment: msg.otherUser,
-            listingId: msg.listingId
+            listingId: msg.listingId,
+            noChangeListing: msg.noChangeListing
           });
           
         }
@@ -663,15 +659,17 @@ function(app,Spinner, highlight) {
       } else {
         $('.search-input').hide();
         $('.loading-list').show();
+        $('.close-box').hide();
         if (!Modernizr.touch) $('a[href="#search"]').click();
-        if (Modernizr.touch) $('a[href="#search"]').trigger('touchstart');
+        if (Modernizr.touch) $('a[href="#search"]').trigger('click');
         $.get('/getListings', function(data){
-        $('.search-input').show();
-        $('.loading-list').remove();
-        if (!Modernizr.touch) $('a[href="#shout"]').click();
-        if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
-        self.makeListingView(data,true);
-      });
+          $('.search-input').show();
+          $('.close-box').show();
+          $('.loading-list').remove();
+          if (!Modernizr.touch) $('a[href="#shout"]').click();
+          if (Modernizr.touch) $('a[href="#shout"]').trigger('click');
+          self.makeListingView(data,true);
+        });
       }
       
     },
@@ -704,7 +702,7 @@ function(app,Spinner, highlight) {
 
             if (this.options.admin){
               if (!Modernizr.touch) $('a[href="#shout"]').click();
-              if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
+              if (Modernizr.touch) $('a[href="#shout"]').trigger('click');
               $('.etsy-auth').click(function(){
                 
                   $.ajax({
@@ -721,8 +719,9 @@ function(app,Spinner, highlight) {
             } else if (this.options.showShops) {
               $('.search-input').hide();
               $('.loading-list').show();
+              $('.close-box').hide();
               if (!Modernizr.touch) $('a[href="#search"]').click();
-              if (Modernizr.touch) $('a[href="#search"]').trigger('touchstart');
+              if (Modernizr.touch) $('a[href="#search"]').trigger('click');
                   $.ajax({
                     type: "GET",
                     url: '/getShops',
@@ -730,8 +729,9 @@ function(app,Spinner, highlight) {
                       Feed.userId = data.adminId;
                       $('.etsy-login').remove();
                       $('.shop-info').show();
+                      $('.close-box').show();
                       if (!Modernizr.touch) $('a[href="#shout"]').click();
-                      if (Modernizr.touch) $('a[href="#shout"]').trigger('touchstart');
+                      if (Modernizr.touch) $('a[href="#shout"]').trigger('click');
                       $('.search-input').show();
                       $('.loading-list').remove();
                       $('.user-posting-section').find('.sticky').addClass('shop-sticky');
@@ -780,7 +780,6 @@ function(app,Spinner, highlight) {
                   $('.fb-login').hide();
                   $('.user-posting-section').find('.sticky').addClass('user-sticky');
                   $('.user-posting-section').show();
-                  self.getMessages(data);
                   
                 });
             });

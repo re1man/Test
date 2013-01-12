@@ -159,7 +159,7 @@ ul.feed-tabs li a i {
 	height:30px;
 	width:30px;
 }
-.mobile.add-listing, .mobile.add-listing-to{
+.mobile.add-listing, .mobile.add-listing-to, .mobile.comment-listing-to{
 	height:30px;
 }
 .mobile.post-shout i, .mobile.post-comment i {
@@ -167,7 +167,7 @@ ul.feed-tabs li a i {
 	top: 10px;
 	left: 10px;
 }
-.mobile.add-listing i, .mobile.add-listing-to i{
+.mobile.add-listing i, .mobile.add-listing-to i, .mobile.comment-listing-to i {
 	position: relative;
 	top: 8px;
 }
@@ -341,6 +341,7 @@ hr{
 }
 .tags-list, .styles-list{
 	margin-top:5px;
+	display:table;
 }
 .tags-list li, .styles-list li {
 	float:left;
@@ -360,6 +361,9 @@ hr{
 }
 .adding-listing .add-listing-to{
 	display:inline-block;
+}
+.adding-listing .comment-listing-to{
+	display:none;
 }
 .add-listing-to {
 	display: none;

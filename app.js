@@ -259,6 +259,13 @@ app.post('/addListing', function(req, res){
     if (!req.session.user) res.send(404);
     addListing(req.body.userId, req.body.index, req.session.user.id, req.body.listingId, req, res);
 });
+
+app.post('/listingComment', function(req, res){
+    if (!req.session.user) res.send(404);
+    listingComment(req.session.user.id, req.body.listingId, req, res);
+});
+
+
 app.get('/beat', function(req, res){
     getFeed(req,res);
 });
@@ -382,6 +389,46 @@ function addListing(userId, index, otherUser, listingId, req, res){
         } else {
             res.send(new Error('There was an error. Please try Again'));
         }
+    });
+}
+
+function listingComment(userId, listingId, req, res){
+    async.waterfall([
+    function(callback){
+        var messages;
+
+        userDb.hmget(userId, 'messages', function(err, msgs){
+            messages = msgs;
+            callback(null, messages, listingId, req);
+        });
+        
+    },
+    function(messages, listingId,req, callback){
+        var msgs;
+        if (!messages[0]){
+            msgs = [];
+            userDb.sadd('users', userId);
+        } else {
+            msgs = JSON.parse(messages);
+        }
+
+            var _msg = {};
+            _msg.msg = '...';
+            _msg.listingId = listingId;
+            _msg.noChangeListing = true;
+            msgs.push(_msg);
+            var index = msgs.length - 1;
+            var _msgs = JSON.stringify(msgs);
+            userDb.hmset(userId, 'messages', _msgs);
+            callback(null, msgs, index);
+    }
+    ], function (err, result, index) {
+        if (!err){
+            res.send({msgs: result, index:index});
+        } else {
+            res.send(new Error('There was an error. Please try Again'));
+        }
+        
     });
 }
 
