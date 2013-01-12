@@ -455,7 +455,9 @@ function(app,Spinner, highlight) {
       if ($(e.currentTarget).attr('href') === '#search' && !this.searchShouts){
         $('.search-list').show();
         $('.feed-list').hide();
+        clearInterval(Feed.interval);
       } else {
+        this.beat(Feed.beat);
         $('.search-list').hide();
         $('.feed-list').show();
         Feed.AddTo.userId = null;
@@ -590,7 +592,7 @@ function(app,Spinner, highlight) {
     },
     beat: function(url){
       var self = this;
-      setInterval(function(){
+      Feed.interval = setInterval(function(){
         $.get(url, function(data){
           self.moreMessages(data);
           if (self.searchShouts){
@@ -613,7 +615,7 @@ function(app,Spinner, highlight) {
           if (score > 0) { scores.push([score, i]); }
         });
 
-        jQuery.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
+        $.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
           $(Feed.rows[ this[1] ]).show();
           $(Feed.rows[ this[1] ]).highlight(term);
         });
@@ -632,7 +634,7 @@ function(app,Spinner, highlight) {
           if (score > 0) { scores.push([score, i]); }
         });
 
-        jQuery.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
+        $.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
           $(self.rows[ this[1] ]).show();
           $(self.rows[ this[1] ]).highlight(term);
         });
@@ -686,7 +688,7 @@ function(app,Spinner, highlight) {
       $('.search-list').hide();
     },
     afterRender:function(){
-        
+
       if (!Modernizr.touch) {
         this.$('.mobile').remove();
       } else {
@@ -694,6 +696,18 @@ function(app,Spinner, highlight) {
       }
 
       var self = this;
+      if (!Modernizr.touch){
+        restartInterval('mousemove scroll');
+      } else {
+        restartInterval('touchstart');
+      }
+      function restartInterval(event){
+        $(window).on(event, function(){
+          if (!Feed.interval && !$('a[href="#search"]').parent().hasClass('active')) {
+            self.beat(Feed.beat);
+          }
+        });
+      }
       this.checkWindow();
       $(window).on('resize', this.checkWindow);
 
@@ -738,6 +752,7 @@ function(app,Spinner, highlight) {
                       $('.user-posting-section').show();
                       self.searchShouts = true;
                       setTimeout(function(){
+                        Feed.beat = '/adminBeat';
                         self.beat('/adminBeat');
                       },3000);
                       self.updateUserCache(data.listings);
@@ -760,6 +775,7 @@ function(app,Spinner, highlight) {
                   check();
               }
               setTimeout(function(){
+                Feed.beat = '/beat';
                 self.beat('/beat');
               },3000);
              });
@@ -769,6 +785,7 @@ function(app,Spinner, highlight) {
                   check();
               }
               setTimeout(function(){
+                Feed.beat = '/beat';
                 self.beat('/beat');
               },3000);
               
