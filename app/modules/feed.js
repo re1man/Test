@@ -596,7 +596,6 @@ function(app,Spinner, highlight) {
     beat: function(url){
       var self = this;
       Feed.interval = setInterval(function(){
-        console.log('hi');
         $.get(url, function(data){
           self.moreMessages(data);
           if (self.searchShouts){
@@ -706,7 +705,6 @@ function(app,Spinner, highlight) {
           clearFeedBeat(Feed.interval);
         },
         onActive: function(){
-          console.log(Feed.interval);
           if (!Feed.interval && !$('a[href="#search"]').parent().hasClass('active')) {
             self.beat(Feed.beat);
           }
