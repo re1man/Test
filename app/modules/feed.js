@@ -3,13 +3,16 @@ define([
   "app",
   "spin",
   "highlight",
-  "qs",
+  "idle",
   "bootstrap"
 ],
 
 // Map dependencies from above array.
 function(app,Spinner, highlight) {
-
+  function clearFeedBeat(beat){
+    clearInterval(beat);
+    delete Feed.interval;
+  }
   // Create a new module.
   var Feed = app.module();
   Feed.Intervals = {};
@@ -455,9 +458,9 @@ function(app,Spinner, highlight) {
       if ($(e.currentTarget).attr('href') === '#search' && !this.searchShouts){
         $('.search-list').show();
         $('.feed-list').hide();
-        clearInterval(Feed.interval);
+        clearFeedBeat(Feed.interval);
       } else {
-        this.beat(Feed.beat);
+        if (Feed.beat) this.beat(Feed.beat);
         $('.search-list').hide();
         $('.feed-list').show();
         Feed.AddTo.userId = null;
@@ -593,6 +596,7 @@ function(app,Spinner, highlight) {
     beat: function(url){
       var self = this;
       Feed.interval = setInterval(function(){
+        console.log('hi');
         $.get(url, function(data){
           self.moreMessages(data);
           if (self.searchShouts){
@@ -696,18 +700,20 @@ function(app,Spinner, highlight) {
       }
 
       var self = this;
-      if (!Modernizr.touch){
-        restartInterval('mousemove scroll');
-      } else {
-        restartInterval('touchstart');
-      }
-      function restartInterval(event){
-        $(window).on(event, function(){
+
+      $(document).idle({
+        onIdle: function(){
+          clearFeedBeat(Feed.interval);
+        },
+        onActive: function(){
+          console.log(Feed.interval);
           if (!Feed.interval && !$('a[href="#search"]').parent().hasClass('active')) {
             self.beat(Feed.beat);
           }
-        });
-      }
+        },
+        events: 'mousemove scroll touchstart keydown',
+        idle: 10000
+      });
       this.checkWindow();
       $(window).on('resize', this.checkWindow);
 
@@ -752,8 +758,8 @@ function(app,Spinner, highlight) {
                       $('.user-posting-section').show();
                       self.searchShouts = true;
                       setTimeout(function(){
-                        Feed.beat = '/adminBeat';
-                        self.beat('/adminBeat');
+                          Feed.beat = '/adminBeat';
+                          self.beat('/adminBeat');
                       },3000);
                       self.updateUserCache(data.listings);
                     },
@@ -774,10 +780,6 @@ function(app,Spinner, highlight) {
               if (response.status === 'connected') {
                   check();
               }
-              setTimeout(function(){
-                Feed.beat = '/beat';
-                self.beat('/beat');
-              },3000);
              });
           });
           FB.getLoginStatus(function(response) {
@@ -785,8 +787,8 @@ function(app,Spinner, highlight) {
                   check();
               }
               setTimeout(function(){
-                Feed.beat = '/beat';
-                self.beat('/beat');
+                  Feed.beat = '/beat';
+                  self.beat('/beat');
               },3000);
               
           });

@@ -23,7 +23,8 @@ require.config({
     'modernizr': '../assets/js/libs/modernizr.custom.95716',
     'backbone-touch':'../assets/js/plugins/backbone.touch',
     'qs': '../assets/js/libs/qs_score',
-    "highlight": '../assets/js/plugins/jquery.highlight'
+    "highlight": '../assets/js/plugins/jquery.highlight',
+    "idle": '../assets/js/plugins/jquery.idle'
   },
 
   shim: {
